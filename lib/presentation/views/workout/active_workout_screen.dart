@@ -234,7 +234,14 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
               ...exerciseLog.sets.asMap().entries.map((entry) {
                 final index = entry.key;
                 final set = entry.value;
-                return _buildSetRow(exerciseLog, index, set);
+                return _SetRow(
+                  key: ValueKey(
+                    '${exerciseLog.exerciseId}-$index-${set.isCompleted}',
+                  ),
+                  exerciseLog: exerciseLog,
+                  index: index,
+                  set: set,
+                );
               }),
             const SizedBox(height: AppSizes.spacing12),
             SizedBox(
@@ -251,122 +258,6 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildSetRow(ExerciseLogEntity exerciseLog, int index, set) {
-    final weightController = TextEditingController(text: set.weight.toString());
-    final repsController = TextEditingController(text: set.reps.toString());
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSizes.spacing8),
-      padding: const EdgeInsets.all(AppSizes.spacing12),
-      decoration: BoxDecoration(
-        color: set.isCompleted
-            ? AppColors.success.withOpacity(0.1)
-            : AppColors.surfaceSecondary,
-        borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-        border: Border.all(
-          color: set.isCompleted ? AppColors.success : Colors.transparent,
-          width: 2,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: set.isCompleted ? AppColors.success : AppColors.surface,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                '${index + 1}',
-                style: TextStyle(
-                  color: set.isCompleted ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSizes.spacing12),
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: weightController,
-                    decoration: const InputDecoration(
-                      labelText: 'Weight',
-                      suffixText: 'kg',
-                      isDense: true,
-                    ),
-                    keyboardType: TextInputType.number,
-                    enabled: !set.isCompleted,
-                    onChanged: (value) {
-                      final weight = double.tryParse(value);
-                      if (weight != null) {
-                        ref.read(workoutViewModelProvider.notifier).updateSet(
-                              exerciseLog.exerciseId,
-                              index,
-                              weight: weight,
-                            );
-                      }
-                    },
-                  ),
-                ),
-                const SizedBox(width: AppSizes.spacing8),
-                Expanded(
-                  child: TextFormField(
-                    controller: repsController,
-                    decoration: const InputDecoration(
-                      labelText: 'Reps',
-                      isDense: true,
-                    ),
-                    keyboardType: TextInputType.number,
-                    enabled: !set.isCompleted,
-                    onChanged: (value) {
-                      final reps = int.tryParse(value);
-                      if (reps != null) {
-                        ref.read(workoutViewModelProvider.notifier).updateSet(
-                              exerciseLog.exerciseId,
-                              index,
-                              reps: reps,
-                            );
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: AppSizes.spacing8),
-          if (!set.isCompleted)
-            IconButton(
-              icon: const Icon(Icons.check_circle_outline),
-              color: AppColors.success,
-              onPressed: () {
-                ref.read(workoutViewModelProvider.notifier).completeSet(
-                      exerciseLog.exerciseId,
-                      index,
-                    );
-              },
-            )
-          else
-            const Icon(Icons.check_circle, color: AppColors.success),
-          IconButton(
-            icon: const Icon(Icons.delete_outline, size: 20),
-            color: AppColors.error,
-            onPressed: () {
-              ref.read(workoutViewModelProvider.notifier).deleteSet(
-                    exerciseLog.exerciseId,
-                    index,
-                  );
-            },
-          ),
-        ],
       ),
     );
   }
@@ -468,6 +359,199 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
               AppStrings.cancel,
               style: TextStyle(color: AppColors.error),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Format a numeric value for display in a text field without forcing a
+/// trailing `.0` on whole numbers, so users can type values like `5` or `5.5`
+/// freely.
+String _formatNumber(num value) {
+  if (value is int) return value.toString();
+  if (value == value.truncateToDouble()) {
+    return value.toInt().toString();
+  }
+  return value.toString();
+}
+
+class _SetRow extends ConsumerStatefulWidget {
+  const _SetRow({
+    super.key,
+    required this.exerciseLog,
+    required this.index,
+    required this.set,
+  });
+
+  final ExerciseLogEntity exerciseLog;
+  final int index;
+  final dynamic set;
+
+  @override
+  ConsumerState<_SetRow> createState() => _SetRowState();
+}
+
+class _SetRowState extends ConsumerState<_SetRow> {
+  late final TextEditingController _weightController;
+  late final TextEditingController _repsController;
+
+  @override
+  void initState() {
+    super.initState();
+    _weightController =
+        TextEditingController(text: _formatNumber(widget.set.weight));
+    _repsController =
+        TextEditingController(text: _formatNumber(widget.set.reps));
+  }
+
+  @override
+  void didUpdateWidget(covariant _SetRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Only sync the field text from state when the underlying value changed
+    // due to something other than the user's own typing (e.g. set completed,
+    // reset, or programmatic update). This keeps the user's in-progress input
+    // intact while still reflecting external changes.
+    final newWeightText = _formatNumber(widget.set.weight);
+    if (oldWidget.set.weight != widget.set.weight &&
+        _weightController.text != newWeightText) {
+      _weightController.text = newWeightText;
+    }
+    final newRepsText = _formatNumber(widget.set.reps);
+    if (oldWidget.set.reps != widget.set.reps &&
+        _repsController.text != newRepsText) {
+      _repsController.text = newRepsText;
+    }
+  }
+
+  @override
+  void dispose() {
+    _weightController.dispose();
+    _repsController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final exerciseLog = widget.exerciseLog;
+    final index = widget.index;
+    final set = widget.set;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSizes.spacing8),
+      padding: const EdgeInsets.all(AppSizes.spacing12),
+      decoration: BoxDecoration(
+        color: set.isCompleted
+            ? AppColors.success.withOpacity(0.1)
+            : AppColors.surfaceSecondary,
+        borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+        border: Border.all(
+          color: set.isCompleted ? AppColors.success : Colors.transparent,
+          width: 2,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: set.isCompleted ? AppColors.success : AppColors.surface,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                '${index + 1}',
+                style: TextStyle(
+                  color: set.isCompleted ? Colors.white : AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSizes.spacing12),
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _weightController,
+                    decoration: const InputDecoration(
+                      labelText: 'Weight',
+                      suffixText: 'kg',
+                      isDense: true,
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    enabled: !set.isCompleted,
+                    onChanged: (value) {
+                      if (value.isEmpty) return;
+                      final weight = double.tryParse(value);
+                      if (weight != null) {
+                        ref
+                            .read(workoutViewModelProvider.notifier)
+                            .updateSet(
+                              exerciseLog.exerciseId,
+                              index,
+                              weight: weight,
+                            );
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(width: AppSizes.spacing8),
+                Expanded(
+                  child: TextFormField(
+                    controller: _repsController,
+                    decoration: const InputDecoration(
+                      labelText: 'Reps',
+                      isDense: true,
+                    ),
+                    keyboardType: TextInputType.number,
+                    enabled: !set.isCompleted,
+                    onChanged: (value) {
+                      if (value.isEmpty) return;
+                      final reps = int.tryParse(value);
+                      if (reps != null) {
+                        ref
+                            .read(workoutViewModelProvider.notifier)
+                            .updateSet(
+                              exerciseLog.exerciseId,
+                              index,
+                              reps: reps,
+                            );
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSizes.spacing8),
+          if (!set.isCompleted)
+            IconButton(
+              icon: const Icon(Icons.check_circle_outline),
+              color: AppColors.success,
+              onPressed: () {
+                ref.read(workoutViewModelProvider.notifier).completeSet(
+                      exerciseLog.exerciseId,
+                      index,
+                    );
+              },
+            )
+          else
+            const Icon(Icons.check_circle, color: AppColors.success),
+          IconButton(
+            icon: const Icon(Icons.delete_outline, size: 20),
+            color: AppColors.error,
+            onPressed: () {
+              ref.read(workoutViewModelProvider.notifier).deleteSet(
+                    exerciseLog.exerciseId,
+                    index,
+                  );
+            },
           ),
         ],
       ),
