@@ -32,7 +32,7 @@ class FirebaseWorkoutDataSource {
           .orderBy('createdAt', descending: true)
           .get();
       return snapshot.docs
-          .map((doc) => ProgramModel.fromJson({'id': doc.id, ...doc.data()}))
+          .map((doc) => ProgramModel.fromJson({...doc.data(), 'id': doc.id}))
           .toList();
     } catch (e) {
       throw ServerException(message: 'Failed to get programs: $e');
@@ -48,7 +48,7 @@ class FirebaseWorkoutDataSource {
           .doc(programId)
           .get();
       if (!doc.exists) return null;
-      return ProgramModel.fromJson({'id': doc.id, ...doc.data()!});
+      return ProgramModel.fromJson({...doc.data()!, 'id': doc.id});
     } catch (e) {
       throw ServerException(message: 'Failed to get program: $e');
     }
@@ -62,7 +62,7 @@ class FirebaseWorkoutDataSource {
           .collection('programs')
           .add(program.toJson());
       final doc = await docRef.get();
-      return ProgramModel.fromJson({'id': doc.id, ...doc.data()!});
+      return ProgramModel.fromJson({...doc.data()!, 'id': doc.id});
     } catch (e) {
       throw ServerException(message: 'Failed to create program: $e');
     }
@@ -120,7 +120,7 @@ class FirebaseWorkoutDataSource {
           .get();
       if (snapshot.docs.isEmpty) return null;
       final doc = snapshot.docs.first;
-      return WorkoutSessionModel.fromJson({'id': doc.id, ...doc.data()});
+      return WorkoutSessionModel.fromJson({...doc.data(), 'id': doc.id});
     } catch (e) {
       throw ServerException(message: 'Failed to get active session: $e');
     }
@@ -146,7 +146,7 @@ class FirebaseWorkoutDataSource {
           .collection('sessions')
           .add(session.toJson());
       final doc = await docRef.get();
-      return WorkoutSessionModel.fromJson({'id': doc.id, ...doc.data()!});
+      return WorkoutSessionModel.fromJson({...doc.data()!, 'id': doc.id});
     } catch (e) {
       throw ServerException(message: 'Failed to start session: $e');
     }
@@ -185,7 +185,7 @@ class FirebaseWorkoutDataSource {
           .collection('sessions')
           .doc(sessionId)
           .get();
-      return WorkoutSessionModel.fromJson({'id': doc.id, ...doc.data()!});
+      return WorkoutSessionModel.fromJson({...doc.data()!, 'id': doc.id});
     } catch (e) {
       throw ServerException(message: 'Failed to complete session: $e');
     }
@@ -213,7 +213,7 @@ class FirebaseWorkoutDataSource {
           .doc(sessionId)
           .get();
       if (!doc.exists) return null;
-      return WorkoutSessionModel.fromJson({'id': doc.id, ...doc.data()!});
+      return WorkoutSessionModel.fromJson({...doc.data()!, 'id': doc.id});
     } catch (e) {
       throw ServerException(message: 'Failed to get session: $e');
     }
@@ -238,7 +238,7 @@ class FirebaseWorkoutDataSource {
       final snapshot = await query.get();
       return snapshot.docs
           .map((doc) =>
-              WorkoutSessionModel.fromJson({'id': doc.id, ...doc.data()}))
+              WorkoutSessionModel.fromJson({...doc.data(), 'id': doc.id}))
           .toList();
     } catch (e) {
       throw ServerException(message: 'Failed to get history: $e');
@@ -263,7 +263,7 @@ class FirebaseWorkoutDataSource {
       final exerciseLogs = <ExerciseLogModel>[];
       for (final doc in snapshot.docs) {
         final session = WorkoutSessionModel.fromJson(
-          {'id': doc.id, ...doc.data()},
+          {...doc.data(), 'id': doc.id},
         );
         final logs = session.exerciseLogs
             .where((log) => log.exerciseName == exerciseName)
@@ -288,7 +288,7 @@ class FirebaseWorkoutDataSource {
       final exerciseNames = <String>{};
       for (final doc in snapshot.docs) {
         final session = WorkoutSessionModel.fromJson(
-          {'id': doc.id, ...doc.data()},
+          {...doc.data(), 'id': doc.id},
         );
         for (final log in session.exerciseLogs) {
           exerciseNames.add(log.exerciseName);

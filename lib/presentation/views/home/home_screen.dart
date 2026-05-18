@@ -89,7 +89,9 @@ class HomeScreen extends ConsumerWidget {
       color: AppColors.primary.withOpacity(0.1),
       child: InkWell(
         onTap: () {
-          context.push('${AppRoutes.workout}/${session.programId}');
+          context.push(
+            AppRoutes.workout.replaceAll(':programId', session.programId),
+          );
         },
         child: Padding(
           padding: const EdgeInsets.all(AppSizes.spacing16),
