@@ -55,7 +55,9 @@ class ProgramState {
 class ProgramViewModel extends _$ProgramViewModel {
   @override
   ProgramState build() {
-    loadPrograms();
+    // Defer the async load until after `build()` returns so that `state`
+    // is initialized before `loadPrograms()` tries to read/write it.
+    Future.microtask(loadPrograms);
     return const ProgramState(isLoading: true);
   }
 
