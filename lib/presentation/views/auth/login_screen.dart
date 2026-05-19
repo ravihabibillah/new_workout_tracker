@@ -6,11 +6,18 @@ import '../../../core/constants/app_sizes.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 
-class LoginScreen extends ConsumerWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  bool _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -45,9 +52,24 @@ class LoginScreen extends ConsumerWidget {
               ),
               const Spacer(),
               ElevatedButton.icon(
-                onPressed: () => _signInWithGoogle(context, ref),
-                icon: const Icon(Icons.login),
-                label: const Text(AppStrings.signInWithGoogle),
+                onPressed: _isLoading ? null : _signInWithGoogle,
+                icon: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.background,
+                          ),
+                        ),
+                      )
+                    : const Icon(Icons.login),
+                label: Text(
+                  _isLoading
+                      ? 'Signing in...'
+                      : AppStrings.signInWithGoogle,
+                ),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     vertical: AppSizes.spacing16,
@@ -62,11 +84,15 @@ class LoginScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _signInWithGoogle(BuildContext context, WidgetRef ref) async {
+  Future<void> _signInWithGoogle() async {
+    setState(() => _isLoading = true);
     try {
       await ref.read(authViewModelProvider.notifier).signInWithGoogle();
+      // Don't reset _isLoading on success: GoRouter will redirect to home,
+      // and resetting state on a disposed widget would be a no-op anyway.
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
+        setState(() => _isLoading = false);
         context.showErrorSnackBar(e.toString());
       }
     }
