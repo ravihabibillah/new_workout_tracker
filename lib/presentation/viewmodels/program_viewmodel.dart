@@ -77,10 +77,13 @@ class ProgramState {
 class ProgramViewModel extends _$ProgramViewModel {
   @override
   ProgramState build() {
-    final authState = ref.watch(authViewModelProvider);
-    if (authState.hasValue && authState.value != null) {
-      Future.microtask(loadPrograms);
-    }
+    // Reset state when the user signs out so the next account
+    // doesn't see the previous user's programs.
+    ref.listen(authViewModelProvider, (prev, next) {
+      if (next.hasValue && next.value == null) {
+        state = const ProgramState();
+      }
+    });
     return const ProgramState(isLoading: true);
   }
 

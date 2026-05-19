@@ -9,14 +9,28 @@ import '../../viewmodels/auth_viewmodel.dart';
 import '../../viewmodels/program_viewmodel.dart';
 import '../../viewmodels/workout_viewmodel.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool _programsLoaded = false;
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final programState = ref.watch(programViewModelProvider);
     final workoutState = ref.watch(workoutViewModelProvider);
+
+    if (!_programsLoaded && user != null) {
+      _programsLoaded = true;
+      Future.microtask(() {
+        ref.read(programViewModelProvider.notifier).loadPrograms();
+      });
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
