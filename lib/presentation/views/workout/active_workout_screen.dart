@@ -823,6 +823,16 @@ class _TimerPickerDialogState extends State<_TimerPickerDialog> {
   int get _seconds => int.tryParse(_secondsController.text) ?? 0;
   int get _totalSeconds => (_minutes * 60 + _seconds).clamp(0, 600);
 
+  void _adjustTime(int delta) {
+    final newTotal = (_totalSeconds + delta).clamp(0, 600);
+    final newMinutes = newTotal ~/ 60;
+    final newSeconds = newTotal % 60;
+    setState(() {
+      _minutesController.text = newMinutes.toString();
+      _secondsController.text = newSeconds.toString();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -832,62 +842,91 @@ class _TimerPickerDialogState extends State<_TimerPickerDialog> {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SizedBox(
-                width: 70,
-                child: TextField(
-                  controller: _minutesController,
-                  focusNode: _minutesFocus,
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
+              Column(
+                children: [
+                  SizedBox(
+                    width: 70,
+                    child: TextField(
+                      controller: _minutesController,
+                      focusNode: _minutesFocus,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
                   ),
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(vertical: 12),
+                  const SizedBox(height: AppSizes.spacing4),
+                  Text(
+                    'min',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                   ),
-                  onChanged: (_) => setState(() {}),
+                ],
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppSizes.spacing12),
+                child: Text(
+                  ':',
+                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                 ),
               ),
-              const SizedBox(width: AppSizes.spacing8),
-              Text(
-                'min',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
+              Column(
+                children: [
+                  SizedBox(
+                    width: 70,
+                    child: TextField(
+                      controller: _secondsController,
+                      focusNode: _secondsFocus,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onChanged: (_) => setState(() {}),
                     ),
-              ),
-              const SizedBox(width: AppSizes.spacing16),
-              const Text(
-                ':',
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(width: AppSizes.spacing16),
-              SizedBox(
-                width: 70,
-                child: TextField(
-                  controller: _secondsController,
-                  focusNode: _secondsFocus,
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
                   ),
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(vertical: 12),
+                  const SizedBox(height: AppSizes.spacing4),
+                  Text(
+                    'sec',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                   ),
-                  onChanged: (_) => setState(() {}),
-                ),
+                ],
               ),
-              const SizedBox(width: AppSizes.spacing8),
-              Text(
-                'sec',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+            ],
+          ),
+          const SizedBox(height: AppSizes.spacing16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              OutlinedButton(
+                onPressed: _totalSeconds >= 15
+                    ? () => _adjustTime(-15)
+                    : null,
+                child: const Text('-15s'),
+              ),
+              const SizedBox(width: AppSizes.spacing12),
+              OutlinedButton(
+                onPressed: _totalSeconds < 600
+                    ? () => _adjustTime(15)
+                    : null,
+                child: const Text('+15s'),
               ),
             ],
           ),
