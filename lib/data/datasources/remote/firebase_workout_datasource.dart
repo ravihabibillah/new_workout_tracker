@@ -167,6 +167,8 @@ class FirebaseWorkoutDataSource {
   Future<WorkoutSessionModel> startWorkoutSession({
     required String programId,
     required String programName,
+    bool useRestTimer = false,
+    int restTimerDuration = 90,
   }) async {
     try {
       final session = WorkoutSessionModel(
@@ -177,6 +179,8 @@ class FirebaseWorkoutDataSource {
         startTime: DateTime.now(),
         exerciseLogs: [],
         isCompleted: false,
+        useRestTimer: useRestTimer,
+        restTimerDuration: restTimerDuration,
       );
       final docRef = await _firestore
           .collection('users')

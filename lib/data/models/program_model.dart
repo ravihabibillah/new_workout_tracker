@@ -11,6 +11,8 @@ class ProgramModel extends ProgramEntity {
     required super.exercises,
     required super.createdAt,
     super.updatedAt,
+    super.useRestTimer,
+    super.restTimerDuration,
   });
 
   factory ProgramModel.fromEntity(ProgramEntity entity) {
@@ -24,6 +26,8 @@ class ProgramModel extends ProgramEntity {
           .toList(),
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
+      useRestTimer: entity.useRestTimer,
+      restTimerDuration: entity.restTimerDuration,
     );
   }
 
@@ -40,6 +44,8 @@ class ProgramModel extends ProgramEntity {
       updatedAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt'] as String)
           : null,
+      useRestTimer: json['useRestTimer'] as bool? ?? false,
+      restTimerDuration: json['restTimerDuration'] as int? ?? 90,
     );
   }
 
@@ -54,6 +60,8 @@ class ProgramModel extends ProgramEntity {
           .toList(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
+      'useRestTimer': useRestTimer,
+      'restTimerDuration': restTimerDuration,
     };
   }
 
@@ -68,6 +76,8 @@ class ProgramModel extends ProgramEntity {
           .toList(),
       createdAt: createdAt,
       updatedAt: updatedAt,
+      useRestTimer: useRestTimer,
+      restTimerDuration: restTimerDuration,
     );
   }
 }

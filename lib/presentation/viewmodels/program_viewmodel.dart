@@ -110,6 +110,8 @@ class ProgramViewModel extends _$ProgramViewModel {
     required String name,
     String? description,
     required List<ExerciseEntity> exercises,
+    bool useRestTimer = false,
+    int restTimerDuration = 90,
   }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
@@ -123,6 +125,8 @@ class ProgramViewModel extends _$ProgramViewModel {
         description: description,
         exercises: exercises,
         createdAt: DateTime.now(),
+        useRestTimer: useRestTimer,
+        restTimerDuration: restTimerDuration,
       );
 
       await useCase(program);

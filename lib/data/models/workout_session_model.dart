@@ -12,6 +12,8 @@ class WorkoutSessionModel extends WorkoutSessionEntity {
     super.endTime,
     required super.exerciseLogs,
     super.isCompleted,
+    super.useRestTimer,
+    super.restTimerDuration,
   });
 
   factory WorkoutSessionModel.fromEntity(WorkoutSessionEntity entity) {
@@ -26,6 +28,8 @@ class WorkoutSessionModel extends WorkoutSessionEntity {
           .map((e) => ExerciseLogModel.fromEntity(e))
           .toList(),
       isCompleted: entity.isCompleted,
+      useRestTimer: entity.useRestTimer,
+      restTimerDuration: entity.restTimerDuration,
     );
   }
 
@@ -43,6 +47,8 @@ class WorkoutSessionModel extends WorkoutSessionEntity {
           .map((e) => ExerciseLogModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       isCompleted: json['isCompleted'] as bool? ?? false,
+      useRestTimer: json['useRestTimer'] as bool? ?? false,
+      restTimerDuration: json['restTimerDuration'] as int? ?? 90,
     );
   }
 
@@ -58,6 +64,8 @@ class WorkoutSessionModel extends WorkoutSessionEntity {
           .map((e) => (e as ExerciseLogModel).toJson())
           .toList(),
       'isCompleted': isCompleted,
+      'useRestTimer': useRestTimer,
+      'restTimerDuration': restTimerDuration,
     };
   }
 
@@ -73,6 +81,8 @@ class WorkoutSessionModel extends WorkoutSessionEntity {
           .map((e) => (e as ExerciseLogModel).toEntity())
           .toList(),
       isCompleted: isCompleted,
+      useRestTimer: useRestTimer,
+      restTimerDuration: restTimerDuration,
     );
   }
 }

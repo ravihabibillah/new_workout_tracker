@@ -189,11 +189,15 @@ class WorkoutRepositoryImpl implements IWorkoutRepository {
   Future<WorkoutSessionEntity> startWorkoutSession({
     required String programId,
     required String programName,
+    bool useRestTimer = false,
+    int restTimerDuration = 90,
   }) async {
     try {
       final session = await _dataSource.startWorkoutSession(
         programId: programId,
         programName: programName,
+        useRestTimer: useRestTimer,
+        restTimerDuration: restTimerDuration,
       );
       return session.toEntity();
     } on ServerException catch (e) {

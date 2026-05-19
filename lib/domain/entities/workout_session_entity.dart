@@ -10,6 +10,8 @@ class WorkoutSessionEntity {
   final DateTime? endTime;
   final List<ExerciseLogEntity> exerciseLogs;
   final bool isCompleted;
+  final bool useRestTimer;
+  final int restTimerDuration;
 
   const WorkoutSessionEntity({
     required this.id,
@@ -20,6 +22,8 @@ class WorkoutSessionEntity {
     this.endTime,
     required this.exerciseLogs,
     this.isCompleted = false,
+    this.useRestTimer = false,
+    this.restTimerDuration = 90,
   });
 
   WorkoutSessionEntity copyWith({
@@ -31,6 +35,8 @@ class WorkoutSessionEntity {
     DateTime? endTime,
     List<ExerciseLogEntity>? exerciseLogs,
     bool? isCompleted,
+    bool? useRestTimer,
+    int? restTimerDuration,
   }) {
     return WorkoutSessionEntity(
       id: id ?? this.id,
@@ -41,6 +47,8 @@ class WorkoutSessionEntity {
       endTime: endTime ?? this.endTime,
       exerciseLogs: exerciseLogs ?? this.exerciseLogs,
       isCompleted: isCompleted ?? this.isCompleted,
+      useRestTimer: useRestTimer ?? this.useRestTimer,
+      restTimerDuration: restTimerDuration ?? this.restTimerDuration,
     );
   }
 

@@ -70,12 +70,20 @@ class WorkoutViewModel extends _$WorkoutViewModel {
     }
   }
 
-  Future<void> startWorkout(String programId, String programName) async {
+  Future<void> startWorkout(String programId, String programName, {
+    bool useRestTimer = false,
+    int restTimerDuration = 90,
+  }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final repository = ref.read(workoutRepositoryProvider);
       final useCase = StartWorkoutUseCase(repository);
-      final session = await useCase(programId: programId, programName: programName);
+      final session = await useCase(
+        programId: programId,
+        programName: programName,
+        useRestTimer: useRestTimer,
+        restTimerDuration: restTimerDuration,
+      );
       state = state.copyWith(activeSession: session, isLoading: false);
     } on Failure catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.message);
@@ -175,8 +183,6 @@ class WorkoutViewModel extends _$WorkoutViewModel {
 
     final updatedSession = session.copyWith(exerciseLogs: updatedLogs);
     await _updateSession(updatedSession);
-
-    startRestTimer(90);
   }
 
   Future<void> uncompleteSet(String exerciseId, int setIndex) async {

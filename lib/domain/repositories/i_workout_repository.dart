@@ -58,6 +58,8 @@ abstract class IWorkoutRepository {
   Future<WorkoutSessionEntity> startWorkoutSession({
     required String programId,
     required String programName,
+    bool useRestTimer = false,
+    int restTimerDuration = 90,
   });
 
   /// Update workout session

@@ -25,6 +25,8 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
   final _descriptionController = TextEditingController();
   final List<ExerciseEntity> _exercises = [];
   bool _isLoading = false;
+  bool _useRestTimer = false;
+  int _restTimerDuration = 90;
 
   @override
   void initState() {
@@ -50,6 +52,8 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
           _nameController.text = program.name;
           _descriptionController.text = program.description ?? '';
           _exercises.addAll(program.exercises);
+          _useRestTimer = program.useRestTimer;
+          _restTimerDuration = program.restTimerDuration;
           _isLoading = false;
         });
       }
@@ -108,6 +112,8 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                           children: [
                             _buildProgramInfoSection(),
                             const SizedBox(height: AppSizes.spacing24),
+                            _buildRestTimerSection(),
+                            const SizedBox(height: AppSizes.spacing24),
                             _buildExercisesSection(),
                           ],
                         ),
@@ -165,6 +171,75 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildRestTimerSection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSizes.spacing16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.timer, color: AppColors.primary),
+                const SizedBox(width: AppSizes.spacing8),
+                Expanded(
+                  child: Text(
+                    'Rest Timer',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ),
+                Switch(
+                  value: _useRestTimer,
+                  onChanged: (value) {
+                    setState(() => _useRestTimer = value);
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSizes.spacing8),
+            Text(
+              _useRestTimer
+                  ? 'Tap the timer button after completing a set to start the countdown.'
+                  : 'Enable to show a manual rest timer button on completed sets.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+            ),
+            if (_useRestTimer) ...[
+              const SizedBox(height: AppSizes.spacing16),
+              Text(
+                'Duration: ${_formatDuration(_restTimerDuration)}',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              Slider(
+                value: _restTimerDuration.toDouble(),
+                min: 30,
+                max: 300,
+                divisions: 27,
+                label: _formatDuration(_restTimerDuration),
+                onChanged: (value) {
+                  setState(() => _restTimerDuration = value.round());
+                },
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDuration(int seconds) {
+    final minutes = seconds ~/ 60;
+    final remaining = seconds % 60;
+    if (minutes == 0) return '${remaining}s';
+    if (remaining == 0) return '${minutes}m';
+    return '${minutes}m ${remaining}s';
   }
 
   Widget _buildExercisesSection() {
@@ -342,6 +417,8 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                 ? null
                 : _descriptionController.text.trim(),
             exercises: _exercises,
+            useRestTimer: _useRestTimer,
+            restTimerDuration: _restTimerDuration,
           );
           await ref.read(programViewModelProvider.notifier).updateProgram(updatedProgram);
         }
@@ -352,6 +429,8 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                   ? null
                   : _descriptionController.text.trim(),
               exercises: _exercises,
+              useRestTimer: _useRestTimer,
+              restTimerDuration: _restTimerDuration,
             );
       }
 

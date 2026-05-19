@@ -9,10 +9,14 @@ class StartWorkoutUseCase {
   Future<WorkoutSessionEntity> call({
     required String programId,
     required String programName,
+    bool useRestTimer = false,
+    int restTimerDuration = 90,
   }) async {
     return await _repository.startWorkoutSession(
       programId: programId,
       programName: programName,
+      useRestTimer: useRestTimer,
+      restTimerDuration: restTimerDuration,
     );
   }
 }

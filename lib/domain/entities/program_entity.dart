@@ -9,6 +9,8 @@ class ProgramEntity {
   final List<ExerciseEntity> exercises;
   final DateTime createdAt;
   final DateTime? updatedAt;
+  final bool useRestTimer;
+  final int restTimerDuration;
 
   const ProgramEntity({
     required this.id,
@@ -18,6 +20,8 @@ class ProgramEntity {
     required this.exercises,
     required this.createdAt,
     this.updatedAt,
+    this.useRestTimer = false,
+    this.restTimerDuration = 90,
   });
 
   ProgramEntity copyWith({
@@ -28,6 +32,8 @@ class ProgramEntity {
     List<ExerciseEntity>? exercises,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool? useRestTimer,
+    int? restTimerDuration,
   }) {
     return ProgramEntity(
       id: id ?? this.id,
@@ -37,6 +43,8 @@ class ProgramEntity {
       exercises: exercises ?? this.exercises,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      useRestTimer: useRestTimer ?? this.useRestTimer,
+      restTimerDuration: restTimerDuration ?? this.restTimerDuration,
     );
   }
 

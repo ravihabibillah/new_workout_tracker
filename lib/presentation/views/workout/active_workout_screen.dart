@@ -40,6 +40,8 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
           await ref.read(workoutViewModelProvider.notifier).startWorkout(
                 program.id,
                 program.name,
+                useRestTimer: program.useRestTimer,
+                restTimerDuration: program.restTimerDuration,
               );
 
           for (final exercise in program.exercises) {
@@ -566,7 +568,7 @@ class _SetRowState extends ConsumerState<_SetRow> {
                     );
               },
             )
-          else
+          else ...[
             IconButton(
               icon: const Icon(Icons.check_circle),
               color: AppColors.success,
@@ -578,6 +580,17 @@ class _SetRowState extends ConsumerState<_SetRow> {
                     );
               },
             ),
+            if (ref.watch(workoutViewModelProvider).activeSession?.useRestTimer == true)
+              IconButton(
+                icon: const Icon(Icons.timer, size: 20),
+                color: AppColors.primary,
+                tooltip: 'Start rest timer',
+                onPressed: () {
+                  final duration = ref.read(workoutViewModelProvider).activeSession?.restTimerDuration ?? 90;
+                  ref.read(workoutViewModelProvider.notifier).startRestTimer(duration);
+                },
+              ),
+          ],
           IconButton(
             icon: const Icon(Icons.delete_outline, size: 20),
             color: AppColors.error,
