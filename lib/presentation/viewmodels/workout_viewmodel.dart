@@ -172,6 +172,30 @@ class WorkoutViewModel extends _$WorkoutViewModel {
     startRestTimer(90);
   }
 
+  Future<void> uncompleteSet(String exerciseId, int setIndex) async {
+    final session = state.activeSession;
+    if (session == null) return;
+
+    final exerciseIndex = session.exerciseLogs.indexWhere((log) => log.exerciseId == exerciseId);
+    if (exerciseIndex == -1) return;
+
+    final exercise = session.exerciseLogs[exerciseIndex];
+    if (setIndex >= exercise.sets.length) return;
+
+    final updatedSet = exercise.sets[setIndex].copyWith(
+      isCompleted: false,
+    );
+
+    final updatedSets = [...exercise.sets];
+    updatedSets[setIndex] = updatedSet;
+    final updatedExercise = exercise.copyWith(sets: updatedSets);
+    final updatedLogs = [...session.exerciseLogs];
+    updatedLogs[exerciseIndex] = updatedExercise;
+
+    final updatedSession = session.copyWith(exerciseLogs: updatedLogs);
+    await _updateSession(updatedSession);
+  }
+
   Future<void> deleteSet(String exerciseId, int setIndex) async {
     final session = state.activeSession;
     if (session == null) return;

@@ -510,7 +510,6 @@ class _SetRowState extends ConsumerState<_SetRow> {
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
-                    enabled: !set.isCompleted,
                     onChanged: (value) {
                       if (value.isEmpty) return;
                       final weight = double.tryParse(value);
@@ -536,7 +535,6 @@ class _SetRowState extends ConsumerState<_SetRow> {
                       isDense: true,
                     ),
                     keyboardType: TextInputType.number,
-                    enabled: !set.isCompleted,
                     onChanged: (value) {
                       if (value.isEmpty) return;
                       final reps = int.tryParse(value);
@@ -560,6 +558,7 @@ class _SetRowState extends ConsumerState<_SetRow> {
             IconButton(
               icon: const Icon(Icons.check_circle_outline),
               color: AppColors.success,
+              tooltip: 'Mark as completed',
               onPressed: () {
                 ref.read(workoutViewModelProvider.notifier).completeSet(
                       exerciseLog.exerciseId,
@@ -568,7 +567,17 @@ class _SetRowState extends ConsumerState<_SetRow> {
               },
             )
           else
-            const Icon(Icons.check_circle, color: AppColors.success),
+            IconButton(
+              icon: const Icon(Icons.check_circle),
+              color: AppColors.success,
+              tooltip: 'Tap to edit this set',
+              onPressed: () {
+                ref.read(workoutViewModelProvider.notifier).uncompleteSet(
+                      exerciseLog.exerciseId,
+                      index,
+                    );
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.delete_outline, size: 20),
             color: AppColors.error,
