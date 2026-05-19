@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
@@ -59,8 +60,8 @@ class WorkoutHistoryScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.history,
+            FaIcon(
+              FontAwesomeIcons.clockRotateLeft,
               size: 80,
               color: AppColors.textSecondary,
             ),
@@ -93,8 +94,8 @@ class WorkoutHistoryScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
+            FaIcon(
+              FontAwesomeIcons.circleExclamation,
               size: 64,
               color: AppColors.error,
             ),
@@ -170,8 +171,8 @@ class _WorkoutSessionCard extends StatelessWidget {
             const SizedBox(height: AppSizes.spacing12),
             Row(
               children: [
-                Icon(
-                  Icons.calendar_today,
+                FaIcon(
+                  FontAwesomeIcons.calendar,
                   size: 16,
                   color: AppColors.textSecondary,
                 ),
@@ -183,8 +184,8 @@ class _WorkoutSessionCard extends StatelessWidget {
                       ),
                 ),
                 const SizedBox(width: AppSizes.spacing16),
-                Icon(
-                  Icons.access_time,
+                FaIcon(
+                  FontAwesomeIcons.clock,
                   size: 16,
                   color: AppColors.textSecondary,
                 ),
@@ -204,17 +205,17 @@ class _WorkoutSessionCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _StatItem(
-                  icon: Icons.fitness_center,
+                  icon: FontAwesomeIcons.dumbbell,
                   label: 'Exercises',
                   value: session.exerciseLogs.length.toString(),
                 ),
                 _StatItem(
-                  icon: Icons.repeat,
+                  icon: FontAwesomeIcons.repeat,
                   label: 'Sets',
                   value: session.totalSets.toString(),
                 ),
                 _StatItem(
-                  icon: Icons.timer,
+                  icon: FontAwesomeIcons.stopwatch,
                   label: 'Duration',
                   value: session.duration != null
                       ? '${session.duration!.inMinutes}m'
@@ -244,7 +245,7 @@ class _StatItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(icon, color: AppColors.primary, size: 24),
+        FaIcon(icon, color: AppColors.primary, size: 24),
         const SizedBox(height: AppSizes.spacing4),
         Text(
           value,

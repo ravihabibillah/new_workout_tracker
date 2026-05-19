@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../core/router/app_router.dart';
-import '../../../core/extensions/context_extensions.dart';
 import '../../../core/utils/global_keys.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../viewmodels/program_viewmodel.dart';
@@ -41,7 +41,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         title: Text(AppStrings.appName),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: const FaIcon(FontAwesomeIcons.gear),
             onPressed: () => _showSettingsMenu(context, ref),
           ),
         ],
@@ -70,7 +70,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showStartWorkoutDialog(context, ref),
-        icon: const Icon(Icons.play_arrow),
+        icon: const FaIcon(FontAwesomeIcons.play),
         label: const Text('Start Workout'),
       ),
     );
@@ -122,8 +122,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   color: AppColors.primary,
                   borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
                 ),
-                child: const Icon(
-                  Icons.fitness_center,
+                child: const FaIcon(
+                  FontAwesomeIcons.dumbbell,
                   color: AppColors.background,
                 ),
               ),
@@ -149,8 +149,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ],
                 ),
               ),
-              const Icon(
-                Icons.arrow_forward_ios,
+              const FaIcon(
+                FontAwesomeIcons.chevronRight,
                 color: AppColors.primary,
                 size: 20,
               ),
@@ -177,7 +177,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             Expanded(
               child: _QuickActionCard(
-                icon: Icons.add,
+                icon: FontAwesomeIcons.plus,
                 label: 'New Program',
                 onTap: () => context.push(AppRoutes.createProgram),
               ),
@@ -185,7 +185,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SizedBox(width: AppSizes.spacing12),
             Expanded(
               child: _QuickActionCard(
-                icon: Icons.fitness_center,
+                icon: FontAwesomeIcons.dumbbell,
                 label: 'Exercises',
                 onTap: () => context.push(AppRoutes.exerciseLibrary),
               ),
@@ -197,7 +197,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             Expanded(
               child: _QuickActionCard(
-                icon: Icons.history,
+                icon: FontAwesomeIcons.clockRotateLeft,
                 label: 'History',
                 onTap: () => context.push(AppRoutes.workoutHistory),
               ),
@@ -205,7 +205,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SizedBox(width: AppSizes.spacing12),
             Expanded(
               child: _QuickActionCard(
-                icon: Icons.trending_up,
+                icon: FontAwesomeIcons.arrowTrendUp,
                 label: 'Progress',
                 onTap: () => context.push(AppRoutes.progress),
               ),
@@ -257,7 +257,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   title: Text(program.name),
                   subtitle: Text('${program.exercises.length} exercises'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  trailing: const FaIcon(FontAwesomeIcons.chevronRight, size: 16),
                   onTap: () => context.push(
                     AppRoutes.programDetail.replaceAll(':id', program.id),
                   ),
@@ -273,8 +273,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         padding: const EdgeInsets.all(AppSizes.spacing32),
         child: Column(
           children: [
-            Icon(
-              Icons.fitness_center,
+            FaIcon(
+              FontAwesomeIcons.dumbbell,
               size: 64,
               color: AppColors.textSecondary,
             ),
@@ -299,7 +299,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.logout, color: AppColors.error),
+              leading: const FaIcon(FontAwesomeIcons.rightFromBracket, color: AppColors.error),
               title: const Text('Logout'),
               onTap: () {
                 Navigator.pop(context);
@@ -366,8 +366,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       color: AppColors.primary,
                       borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
                     ),
-                    child: const Icon(
-                      Icons.flash_on,
+                    child: const FaIcon(
+                      FontAwesomeIcons.bolt,
                       color: AppColors.background,
                     ),
                   ),
@@ -455,7 +455,7 @@ class _QuickActionCard extends StatelessWidget {
           padding: const EdgeInsets.all(AppSizes.spacing16),
           child: Column(
             children: [
-              Icon(icon, color: AppColors.primary, size: 32),
+              FaIcon(icon, color: AppColors.primary, size: 32),
               const SizedBox(height: AppSizes.spacing8),
               Text(
                 label,

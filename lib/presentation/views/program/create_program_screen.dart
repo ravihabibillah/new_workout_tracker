@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
@@ -126,7 +127,7 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
             ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddExerciseDialog,
-        icon: const Icon(Icons.add),
+        icon: const FaIcon(FontAwesomeIcons.plus),
         label: const Text(AppStrings.addExercise),
       ),
     );
@@ -151,7 +152,10 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
               decoration: const InputDecoration(
                 labelText: AppStrings.programName,
                 hintText: 'e.g., Push Day A',
-                prefixIcon: Icon(Icons.fitness_center),
+                prefixIcon: Padding(
+                  padding: EdgeInsets.all(12),
+                  child: FaIcon(FontAwesomeIcons.dumbbell, size: 20),
+                ),
               ),
               validator: (value) => Validators.required(value, fieldName: 'Program name'),
               textCapitalization: TextCapitalization.words,
@@ -162,7 +166,10 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
               decoration: const InputDecoration(
                 labelText: AppStrings.programDescription,
                 hintText: 'Optional description',
-                prefixIcon: Icon(Icons.description),
+                prefixIcon: Padding(
+                  padding: EdgeInsets.all(12),
+                  child: FaIcon(FontAwesomeIcons.fileLines, size: 20),
+                ),
               ),
               maxLines: 3,
               textInputAction: TextInputAction.done,
@@ -183,7 +190,7 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.timer, color: AppColors.primary),
+                FaIcon(FontAwesomeIcons.stopwatch, color: AppColors.primary),
                 const SizedBox(width: AppSizes.spacing8),
                 Expanded(
                   child: Text(
@@ -291,7 +298,7 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                   leading: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.drag_handle, color: AppColors.textSecondary),
+                      FaIcon(FontAwesomeIcons.gripLines, color: AppColors.textSecondary),
                       const SizedBox(width: AppSizes.spacing8),
                       CircleAvatar(
                         backgroundColor: AppColors.surfaceSecondary,
@@ -318,7 +325,7 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                         ),
                   ),
                   trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: AppColors.error),
+                    icon: const FaIcon(FontAwesomeIcons.trashCan, color: AppColors.error),
                     onPressed: () => _removeExercise(index),
                   ),
                 ),
@@ -336,8 +343,8 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
         child: Center(
           child: Column(
             children: [
-              Icon(
-                Icons.fitness_center,
+              FaIcon(
+                FontAwesomeIcons.dumbbell,
                 size: 64,
                 color: AppColors.textSecondary,
               ),

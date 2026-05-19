@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
@@ -239,18 +240,18 @@ class _ExerciseProgressScreenState
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _RecordItem(
-                  icon: Icons.fitness_center,
+                  icon: FontAwesomeIcons.dumbbell,
                   label: 'Max Weight',
                   value:
                       '${records['maxWeight']?.toStringAsFixed(1) ?? '0'} kg',
                 ),
                 _RecordItem(
-                  icon: Icons.repeat,
+                  icon: FontAwesomeIcons.repeat,
                   label: 'Max Reps',
                   value: '${records['maxReps'] ?? 0}',
                 ),
                 _RecordItem(
-                  icon: Icons.trending_up,
+                  icon: FontAwesomeIcons.arrowTrendUp,
                   label: 'Max Volume',
                   value:
                       '${records['maxVolume']?.toStringAsFixed(0) ?? '0'} kg',
@@ -261,7 +262,7 @@ class _ExerciseProgressScreenState
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.history,
+                FaIcon(FontAwesomeIcons.clockRotateLeft,
                     size: 16, color: AppColors.textSecondary),
                 const SizedBox(width: AppSizes.spacing4),
                 Text(
@@ -296,15 +297,15 @@ class _ExerciseProgressScreenState
         ? AppColors.textSecondary
         : (isUp ? AppColors.success : AppColors.error);
     final icon = isFlat
-        ? Icons.trending_flat
-        : (isUp ? Icons.trending_up : Icons.trending_down);
+        ? FontAwesomeIcons.arrowRight
+        : (isUp ? FontAwesomeIcons.arrowTrendUp : FontAwesomeIcons.arrowTrendDown);
 
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSizes.spacing16),
         child: Row(
           children: [
-            Icon(icon, color: color, size: 32),
+            FaIcon(icon, color: color, size: 32),
             const SizedBox(width: AppSizes.spacing16),
             Expanded(
               child: Column(
@@ -360,7 +361,7 @@ class _ExerciseProgressScreenState
           children: [
             Row(
               children: [
-                Icon(Icons.show_chart, color: AppColors.primary),
+                FaIcon(FontAwesomeIcons.chartLine, color: AppColors.primary),
                 const SizedBox(width: AppSizes.spacing8),
                 Text(
                   '${_selectedMetric.label} Over Time',
@@ -597,7 +598,7 @@ class _ExerciseProgressScreenState
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.event_busy,
+              FaIcon(FontAwesomeIcons.calendarXmark,
                   size: 48, color: AppColors.textSecondary),
               const SizedBox(height: AppSizes.spacing12),
               Text(
@@ -620,8 +621,8 @@ class _ExerciseProgressScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.bar_chart,
+            FaIcon(
+              FontAwesomeIcons.chartColumn,
               size: 80,
               color: AppColors.textSecondary,
             ),
@@ -662,7 +663,7 @@ class _RecordItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(icon, color: AppColors.primary, size: 28),
+        FaIcon(icon, color: AppColors.primary, size: 28),
         const SizedBox(height: AppSizes.spacing8),
         Text(
           value,

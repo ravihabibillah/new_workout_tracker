@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
@@ -33,7 +34,7 @@ class ProgramDetailScreen extends ConsumerWidget {
             title: Text(program.name),
             actions: [
               IconButton(
-                icon: const Icon(Icons.edit),
+                icon: const FaIcon(FontAwesomeIcons.penToSquare),
                 onPressed: () {
                   context.push(
                     AppRoutes.editProgram.replaceAll(':id', programId),
@@ -41,7 +42,7 @@ class ProgramDetailScreen extends ConsumerWidget {
                 },
               ),
               IconButton(
-                icon: const Icon(Icons.delete),
+                icon: const FaIcon(FontAwesomeIcons.trashCan),
                 onPressed: () => _showDeleteConfirmation(context, ref),
               ),
             ],
@@ -203,8 +204,8 @@ class ProgramDetailScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(AppSizes.spacing32),
         child: Column(
           children: [
-            Icon(
-              Icons.fitness_center,
+            FaIcon(
+              FontAwesomeIcons.dumbbell,
               size: 64,
               color: AppColors.textSecondary,
             ),
@@ -250,7 +251,7 @@ class ProgramDetailScreen extends ConsumerWidget {
                     AppRoutes.workout.replaceAll(':programId', programId),
                   );
                 },
-          icon: const Icon(Icons.play_arrow),
+          icon: const FaIcon(FontAwesomeIcons.play),
           label: const Text('Start Workout'),
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 56),

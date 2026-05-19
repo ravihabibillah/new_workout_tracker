@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
@@ -86,7 +87,10 @@ class ProgressScreen extends ConsumerWidget {
               value: state.selectedExercise,
               decoration: InputDecoration(
                 hintText: 'Choose an exercise',
-                prefixIcon: const Icon(Icons.fitness_center),
+                prefixIcon: Padding(
+                  padding: EdgeInsets.all(12),
+                  child: FaIcon(FontAwesomeIcons.dumbbell, size: 20),
+                ),
                 filled: true,
                 fillColor: AppColors.surfaceSecondary,
               ),
@@ -126,7 +130,7 @@ class ProgressScreen extends ConsumerWidget {
           children: [
             Expanded(
               child: _StatCard(
-                icon: Icons.fitness_center,
+                icon: FontAwesomeIcons.dumbbell,
                 label: AppStrings.maxWeight,
                 value: '${records['maxWeight']?.toStringAsFixed(1) ?? '0'} kg',
                 color: AppColors.primary,
@@ -135,7 +139,7 @@ class ProgressScreen extends ConsumerWidget {
             const SizedBox(width: AppSizes.spacing12),
             Expanded(
               child: _StatCard(
-                icon: Icons.repeat,
+                icon: FontAwesomeIcons.repeat,
                 label: AppStrings.maxReps,
                 value: '${records['maxReps'] ?? 0}',
                 color: AppColors.chartSecondary,
@@ -148,7 +152,7 @@ class ProgressScreen extends ConsumerWidget {
           children: [
             Expanded(
               child: _StatCard(
-                icon: Icons.trending_up,
+                icon: FontAwesomeIcons.arrowTrendUp,
                 label: AppStrings.totalVolume,
                 value: '${records['maxVolume']?.toStringAsFixed(0) ?? '0'} kg',
                 color: AppColors.success,
@@ -157,7 +161,7 @@ class ProgressScreen extends ConsumerWidget {
             const SizedBox(width: AppSizes.spacing12),
             Expanded(
               child: _StatCard(
-                icon: Icons.history,
+                icon: FontAwesomeIcons.clockRotateLeft,
                 label: AppStrings.totalSessions,
                 value: '${state.progressData.length}',
                 color: AppColors.info,
@@ -179,7 +183,7 @@ class ProgressScreen extends ConsumerWidget {
             '/progress/${Uri.encodeComponent(exerciseName)}?name=${Uri.encodeComponent(exerciseName)}',
           );
         },
-        icon: const Icon(Icons.bar_chart),
+        icon: FaIcon(FontAwesomeIcons.chartColumn),
         label: const Text('View Detailed Progress'),
       ),
     );
@@ -192,8 +196,8 @@ class ProgressScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.bar_chart,
+            FaIcon(
+              FontAwesomeIcons.chartColumn,
               size: 80,
               color: AppColors.textSecondary,
             ),
@@ -218,8 +222,8 @@ class ProgressScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.trending_up,
+            FaIcon(
+              FontAwesomeIcons.arrowTrendUp,
               size: 80,
               color: AppColors.textSecondary,
             ),
@@ -252,8 +256,8 @@ class ProgressScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
+            FaIcon(
+              FontAwesomeIcons.circleExclamation,
               size: 64,
               color: AppColors.error,
             ),
@@ -292,7 +296,7 @@ class _StatCard extends StatelessWidget {
         padding: const EdgeInsets.all(AppSizes.spacing16),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 32),
+            FaIcon(icon, color: color, size: 32),
             const SizedBox(height: AppSizes.spacing8),
             Text(
               value,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
@@ -111,12 +112,12 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.timer_outlined),
+              icon: const FaIcon(FontAwesomeIcons.stopwatch),
               tooltip: 'Set timer',
               onPressed: () => _showTimerPickerDialog(),
             ),
             IconButton(
-              icon: const Icon(Icons.delete_outline),
+              icon: const FaIcon(FontAwesomeIcons.trashCan),
               tooltip: 'Cancel workout',
               color: AppColors.error,
               onPressed: () async {
@@ -165,7 +166,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
       ),
       child: Row(
         children: [
-          Icon(Icons.timer, color: AppColors.primary),
+          FaIcon(FontAwesomeIcons.stopwatch, color: AppColors.primary),
           const SizedBox(width: AppSizes.spacing12),
           Expanded(
             child: Column(
@@ -273,7 +274,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                         exerciseLog.exerciseId,
                       );
                 },
-                icon: const Icon(Icons.add),
+                icon: const FaIcon(FontAwesomeIcons.plus),
                 label: const Text(AppStrings.addSet),
               ),
             ),
@@ -320,7 +321,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
           children: [
             OutlinedButton.icon(
               onPressed: _addExerciseToWorkout,
-              icon: const Icon(Icons.add),
+              icon: const FaIcon(FontAwesomeIcons.plus),
               label: const Text('Add Exercise'),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 48),
@@ -329,7 +330,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
             const SizedBox(height: AppSizes.spacing8),
             ElevatedButton.icon(
               onPressed: session.completedSets > 0 ? _finishWorkout : null,
-              icon: const Icon(Icons.check),
+              icon: const FaIcon(FontAwesomeIcons.check),
               label: const Text(AppStrings.finishWorkout),
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 56),
@@ -668,7 +669,7 @@ class _SetRowState extends ConsumerState<_SetRow> {
           const SizedBox(width: AppSizes.spacing8),
           if (!set.isCompleted)
             IconButton(
-              icon: const Icon(Icons.check_circle_outline),
+              icon: const FaIcon(FontAwesomeIcons.circleCheck),
               color: AppColors.success,
               tooltip: 'Mark as completed',
               onPressed: () {
@@ -680,7 +681,7 @@ class _SetRowState extends ConsumerState<_SetRow> {
             )
           else ...[
             IconButton(
-              icon: const Icon(Icons.check_circle),
+              icon: const FaIcon(FontAwesomeIcons.solidCircleCheck),
               color: AppColors.success,
               tooltip: 'Tap to edit this set',
               onPressed: () {
@@ -692,7 +693,7 @@ class _SetRowState extends ConsumerState<_SetRow> {
             ),
             if (ref.watch(workoutViewModelProvider).activeSession?.useRestTimer == true)
               IconButton(
-                icon: const Icon(Icons.timer, size: 20),
+                icon: const FaIcon(FontAwesomeIcons.stopwatch, size: 20),
                 color: AppColors.primary,
                 tooltip: 'Start rest timer',
                 onPressed: () {
@@ -702,7 +703,7 @@ class _SetRowState extends ConsumerState<_SetRow> {
               ),
           ],
           IconButton(
-            icon: const Icon(Icons.delete_outline, size: 20),
+            icon: const FaIcon(FontAwesomeIcons.trashCan, size: 20),
             color: AppColors.error,
             onPressed: () {
               ref.read(workoutViewModelProvider.notifier).deleteSet(

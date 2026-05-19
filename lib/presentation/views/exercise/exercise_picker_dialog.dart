@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
@@ -80,7 +81,7 @@ class _ExercisePickerDialogState extends ConsumerState<ExercisePickerDialog>
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: const FaIcon(FontAwesomeIcons.xmark),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -132,11 +133,14 @@ class _ExercisePickerDialogState extends ConsumerState<ExercisePickerDialog>
                 controller: _searchController,
                 decoration: InputDecoration(
                   hintText: AppStrings.searchExercises,
-                  prefixIcon: const Icon(Icons.search),
+                  prefixIcon: const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: FaIcon(FontAwesomeIcons.magnifyingGlass, size: 20),
+                  ),
                   isDense: true,
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.clear),
+                          icon: const FaIcon(FontAwesomeIcons.circleXmark),
                           onPressed: () {
                             _searchController.clear();
                             setState(() => _searchQuery = '');
@@ -189,10 +193,10 @@ class _ExercisePickerDialogState extends ConsumerState<ExercisePickerDialog>
                               backgroundColor: alreadyAdded
                                   ? AppColors.textSecondary.withOpacity(0.3)
                                   : AppColors.surfaceSecondary,
-                              child: Icon(
+                              child: FaIcon(
                                 alreadyAdded
-                                    ? Icons.check
-                                    : Icons.fitness_center,
+                                    ? FontAwesomeIcons.check
+                                    : FontAwesomeIcons.dumbbell,
                                 color: alreadyAdded
                                     ? AppColors.textSecondary
                                     : AppColors.textPrimary,
@@ -252,7 +256,7 @@ class _ExercisePickerDialogState extends ConsumerState<ExercisePickerDialog>
                 const SizedBox(width: AppSizes.spacing8),
                 FilledButton.icon(
                   onPressed: _addSelectedFromLibrary,
-                  icon: const Icon(Icons.add),
+                  icon: const FaIcon(FontAwesomeIcons.plus),
                   label: const Text('Add Selected'),
                 ),
               ],
@@ -315,7 +319,7 @@ class _ExercisePickerDialogState extends ConsumerState<ExercisePickerDialog>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.fitness_center, size: 48, color: AppColors.textSecondary),
+            FaIcon(FontAwesomeIcons.dumbbell, size: 48, color: AppColors.textSecondary),
             const SizedBox(height: AppSizes.spacing16),
             Text(
               isEmpty
@@ -330,7 +334,7 @@ class _ExercisePickerDialogState extends ConsumerState<ExercisePickerDialog>
               const SizedBox(height: AppSizes.spacing16),
               TextButton.icon(
                 onPressed: () => _tabController.animateTo(1),
-                icon: const Icon(Icons.add),
+                icon: const FaIcon(FontAwesomeIcons.plus),
                 label: const Text(AppStrings.createNewExercise),
               ),
             ],
@@ -353,7 +357,10 @@ class _ExercisePickerDialogState extends ConsumerState<ExercisePickerDialog>
               decoration: const InputDecoration(
                 labelText: AppStrings.exerciseName,
                 hintText: 'e.g., Bench Press',
-                prefixIcon: Icon(Icons.fitness_center),
+                prefixIcon: Padding(
+                  padding: EdgeInsets.all(12),
+                  child: FaIcon(FontAwesomeIcons.dumbbell, size: 20),
+                ),
               ),
               textCapitalization: TextCapitalization.words,
               validator: (v) =>
@@ -364,7 +371,10 @@ class _ExercisePickerDialogState extends ConsumerState<ExercisePickerDialog>
               value: _newExerciseMuscleGroup,
               decoration: const InputDecoration(
                 labelText: AppStrings.muscleGroup,
-                prefixIcon: Icon(Icons.category),
+                prefixIcon: Padding(
+                  padding: EdgeInsets.all(12),
+                  child: FaIcon(FontAwesomeIcons.tag, size: 20),
+                ),
               ),
               items: [
                 AppStrings.chest,
@@ -386,7 +396,10 @@ class _ExercisePickerDialogState extends ConsumerState<ExercisePickerDialog>
               decoration: const InputDecoration(
                 labelText: AppStrings.exerciseDescription,
                 hintText: 'Optional notes',
-                prefixIcon: Icon(Icons.description),
+                prefixIcon: Padding(
+                  padding: EdgeInsets.all(12),
+                  child: FaIcon(FontAwesomeIcons.fileLines, size: 20),
+                ),
               ),
               maxLines: 2,
               textCapitalization: TextCapitalization.sentences,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
@@ -29,7 +30,7 @@ class ProgramListScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push(AppRoutes.createProgram),
-        icon: const Icon(Icons.add),
+        icon: const FaIcon(FontAwesomeIcons.plus),
         label: const Text(AppStrings.createProgram),
       ),
     );
@@ -48,8 +49,8 @@ class ProgramListScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
+            FaIcon(
+              FontAwesomeIcons.circleExclamation,
               size: 64,
               color: AppColors.error,
             ),
@@ -121,8 +122,8 @@ class ProgramListScreen extends ConsumerWidget {
                 ],
                 Row(
                   children: [
-                    Icon(
-                      Icons.fitness_center,
+                    FaIcon(
+                      FontAwesomeIcons.dumbbell,
                       size: 16,
                       color: AppColors.textSecondary,
                     ),
@@ -138,12 +139,12 @@ class ProgramListScreen extends ConsumerWidget {
               ],
             ),
             trailing: PopupMenuButton(
-              icon: const Icon(Icons.more_vert),
+              icon: const FaIcon(FontAwesomeIcons.ellipsisVertical),
               itemBuilder: (context) => [
                 PopupMenuItem(
                   child: Row(
                     children: const [
-                      Icon(Icons.edit, size: 20),
+                      FaIcon(FontAwesomeIcons.penToSquare, size: 20),
                       SizedBox(width: AppSizes.spacing8),
                       Text(AppStrings.edit),
                     ],
@@ -159,7 +160,7 @@ class ProgramListScreen extends ConsumerWidget {
                 PopupMenuItem(
                   child: Row(
                     children: const [
-                      Icon(Icons.delete, size: 20, color: AppColors.error),
+                      FaIcon(FontAwesomeIcons.trashCan, size: 20, color: AppColors.error),
                       SizedBox(width: AppSizes.spacing8),
                       Text(
                         AppStrings.delete,
@@ -193,8 +194,8 @@ class ProgramListScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.fitness_center,
+            FaIcon(
+              FontAwesomeIcons.dumbbell,
               size: 80,
               color: AppColors.textSecondary,
             ),

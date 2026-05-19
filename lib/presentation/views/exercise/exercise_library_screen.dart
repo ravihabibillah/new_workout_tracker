@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_sizes.dart';
@@ -58,7 +59,7 @@ class _ExerciseLibraryScreenState
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showExerciseFormDialog(context),
-        icon: const Icon(Icons.add),
+        icon: const FaIcon(FontAwesomeIcons.plus),
         label: const Text(AppStrings.createExercise),
       ),
     );
@@ -90,10 +91,13 @@ class _ExerciseLibraryScreenState
             controller: _searchController,
             decoration: InputDecoration(
               hintText: AppStrings.searchExercises,
-              prefixIcon: const Icon(Icons.search),
+              prefixIcon: const Padding(
+                padding: EdgeInsets.all(12),
+                child: FaIcon(FontAwesomeIcons.magnifyingGlass, size: 20),
+              ),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
-                      icon: const Icon(Icons.clear),
+                      icon: const FaIcon(FontAwesomeIcons.circleXmark),
                       onPressed: () {
                         _searchController.clear();
                         setState(() => _searchQuery = '');
@@ -209,7 +213,7 @@ class _ExerciseLibraryScreenState
                   value: 'edit',
                   child: Row(
                     children: [
-                      Icon(Icons.edit, size: 18),
+                      FaIcon(FontAwesomeIcons.penToSquare, size: 18),
                       SizedBox(width: AppSizes.spacing8),
                       Text(AppStrings.edit),
                     ],
@@ -219,7 +223,7 @@ class _ExerciseLibraryScreenState
                   value: 'delete',
                   child: Row(
                     children: [
-                      Icon(Icons.delete, size: 18, color: AppColors.error),
+                      FaIcon(FontAwesomeIcons.trashCan, size: 18, color: AppColors.error),
                       SizedBox(width: AppSizes.spacing8),
                       Text(
                         AppStrings.delete,
@@ -243,7 +247,7 @@ class _ExerciseLibraryScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.fitness_center, size: 64, color: AppColors.textSecondary),
+            FaIcon(FontAwesomeIcons.dumbbell, size: 64, color: AppColors.textSecondary),
             const SizedBox(height: AppSizes.spacing16),
             Text(
               isLibraryEmpty
@@ -299,7 +303,10 @@ class _ExerciseLibraryScreenState
                     decoration: const InputDecoration(
                       labelText: AppStrings.exerciseName,
                       hintText: 'e.g., Bench Press',
-                      prefixIcon: Icon(Icons.fitness_center),
+                      prefixIcon: Padding(
+                        padding: EdgeInsets.all(12),
+                        child: FaIcon(FontAwesomeIcons.dumbbell, size: 20),
+                      ),
                     ),
                     textCapitalization: TextCapitalization.words,
                     autofocus: true,
@@ -311,7 +318,10 @@ class _ExerciseLibraryScreenState
                     value: selectedMuscleGroup,
                     decoration: const InputDecoration(
                       labelText: AppStrings.muscleGroup,
-                      prefixIcon: Icon(Icons.category),
+                      prefixIcon: Padding(
+                        padding: EdgeInsets.all(12),
+                        child: FaIcon(FontAwesomeIcons.tag, size: 20),
+                      ),
                     ),
                     items: [
                       AppStrings.chest,
@@ -338,7 +348,10 @@ class _ExerciseLibraryScreenState
                     decoration: const InputDecoration(
                       labelText: AppStrings.exerciseDescription,
                       hintText: 'Optional notes or instructions',
-                      prefixIcon: Icon(Icons.description),
+                      prefixIcon: Padding(
+                        padding: EdgeInsets.all(12),
+                        child: FaIcon(FontAwesomeIcons.fileLines, size: 20),
+                      ),
                     ),
                     maxLines: 2,
                     textCapitalization: TextCapitalization.sentences,
