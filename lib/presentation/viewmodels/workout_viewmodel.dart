@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../core/errors/failure.dart';
 import '../../domain/entities/workout_session_entity.dart';
@@ -47,8 +49,13 @@ const _sentinel = Object();
 
 @riverpod
 class WorkoutViewModel extends _$WorkoutViewModel {
+  Timer? _restTimer;
+
   @override
   WorkoutState build() {
+    ref.onDispose(() {
+      _restTimer?.cancel();
+    });
     _loadActiveSession();
     return const WorkoutState(isLoading: true);
   }
@@ -220,10 +227,21 @@ class WorkoutViewModel extends _$WorkoutViewModel {
   }
 
   void startRestTimer(int seconds) {
+    _restTimer?.cancel();
     state = state.copyWith(restTimerSeconds: seconds, isRestTimerActive: true);
+    _restTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      final current = state.restTimerSeconds ?? 0;
+      if (current <= 1) {
+        timer.cancel();
+        state = state.copyWith(restTimerSeconds: 0, isRestTimerActive: false);
+      } else {
+        state = state.copyWith(restTimerSeconds: current - 1);
+      }
+    });
   }
 
   void skipRestTimer() {
+    _restTimer?.cancel();
     state = state.copyWith(restTimerSeconds: 0, isRestTimerActive: false);
   }
 
