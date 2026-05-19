@@ -405,40 +405,12 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
   }
 
   Future<void> _showSaveAsProgramDialog(WorkoutSessionEntity session) async {
-    final nameController = TextEditingController();
-    final shouldSave = await showDialog<bool>(
+    final result = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Save as Program?'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Would you like to save this workout as a reusable program?'),
-            const SizedBox(height: AppSizes.spacing16),
-            TextFormField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Program name',
-                hintText: 'e.g., My Custom Workout',
-              ),
-              textCapitalization: TextCapitalization.words,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('No thanks'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
+      builder: (context) => const _SaveAsProgramDialog(),
     );
 
-    if (shouldSave == true && nameController.text.trim().isNotEmpty && mounted) {
+    if (result != null && result.trim().isNotEmpty && mounted) {
       final exercises = session.exerciseLogs
           .map((log) => ExerciseEntity(
                 id: log.exerciseId,
@@ -449,7 +421,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
           .toList();
 
       await ref.read(programViewModelProvider.notifier).createProgram(
-            name: nameController.text.trim(),
+            name: result.trim(),
             exercises: exercises,
           );
 
@@ -457,7 +429,6 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
         context.showSnackBar('Program saved!');
       }
     }
-    nameController.dispose();
   }
 
   Future<bool?> _showCancelConfirmation() async {
@@ -721,6 +692,61 @@ class _SetRowState extends ConsumerState<_SetRow> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _SaveAsProgramDialog extends StatefulWidget {
+  const _SaveAsProgramDialog();
+
+  @override
+  State<_SaveAsProgramDialog> createState() => _SaveAsProgramDialogState();
+}
+
+class _SaveAsProgramDialogState extends State<_SaveAsProgramDialog> {
+  late final TextEditingController _nameController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Save as Program?'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('Would you like to save this workout as a reusable program?'),
+          const SizedBox(height: AppSizes.spacing16),
+          TextFormField(
+            controller: _nameController,
+            decoration: const InputDecoration(
+              labelText: 'Program name',
+              hintText: 'e.g., My Custom Workout',
+            ),
+            textCapitalization: TextCapitalization.words,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('No thanks'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, _nameController.text),
+          child: const Text('Save'),
+        ),
+      ],
     );
   }
 }
