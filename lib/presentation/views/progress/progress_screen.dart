@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../viewmodels/progress_viewmodel.dart';
+import '../../widgets/shimmer_loading.dart';
 
 class ProgressScreen extends ConsumerWidget {
   const ProgressScreen({super.key});
@@ -29,7 +30,7 @@ class ProgressScreen extends ConsumerWidget {
 
   Widget _buildBody(BuildContext context, WidgetRef ref, ProgressState state) {
     if (state.isLoading && state.exerciseNames.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const ShimmerProgressScreen();
     }
 
     if (state.errorMessage != null) {
@@ -50,7 +51,7 @@ class ProgressScreen extends ConsumerWidget {
           const SizedBox(height: AppSizes.spacing24),
           if (state.selectedExercise != null) ...[
             if (state.isLoading)
-              const Center(child: CircularProgressIndicator())
+              const ShimmerProgressScreen()
             else ...[
               _buildPersonalRecords(context, state),
               const SizedBox(height: AppSizes.spacing24),

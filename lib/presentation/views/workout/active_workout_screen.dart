@@ -8,6 +8,7 @@ import '../../../core/extensions/context_extensions.dart';
 import '../../../domain/entities/exercise_entity.dart';
 import '../../../domain/entities/exercise_log_entity.dart';
 import '../../../domain/entities/workout_session_entity.dart';
+import '../../widgets/shimmer_loading.dart';
 import '../../viewmodels/workout_viewmodel.dart';
 import '../../viewmodels/program_viewmodel.dart';
 import '../exercise/exercise_picker_dialog.dart';
@@ -81,8 +82,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
 
     if (!_isInitialized || state.activeSession == null) {
       return Scaffold(
+        backgroundColor: AppColors.background,
         appBar: AppBar(title: const Text('Loading...')),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const ShimmerWorkoutScreen(),
       );
     }
 

@@ -8,6 +8,7 @@ import '../../../core/router/app_router.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../viewmodels/program_viewmodel.dart';
 import '../../viewmodels/workout_viewmodel.dart';
+import '../../widgets/shimmer_loading.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -235,7 +236,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         const SizedBox(height: AppSizes.spacing16),
         if (state.isLoading)
-          const Center(child: CircularProgressIndicator())
+          const ShimmerProgramList()
         else if (state.programs.isEmpty)
           _buildEmptyState(context)
         else

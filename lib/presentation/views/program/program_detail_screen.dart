@@ -7,6 +7,7 @@ import '../../../core/constants/app_sizes.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../viewmodels/program_viewmodel.dart';
+import '../../widgets/shimmer_loading.dart';
 
 class ProgramDetailScreen extends ConsumerWidget {
   final String programId;
@@ -67,7 +68,7 @@ class ProgramDetailScreen extends ConsumerWidget {
       },
       loading: () => Scaffold(
         appBar: AppBar(title: const Text('Loading...')),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const ShimmerWorkoutScreen(),
       ),
       error: (error, stack) => Scaffold(
         appBar: AppBar(title: const Text('Error')),

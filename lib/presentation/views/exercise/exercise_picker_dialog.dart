@@ -8,6 +8,7 @@ import '../../../core/extensions/context_extensions.dart';
 import '../../../core/utils/validators.dart';
 import '../../../domain/entities/exercise_entity.dart';
 import '../../../domain/entities/exercise_library_entity.dart';
+import '../../widgets/shimmer_loading.dart';
 import '../../viewmodels/exercise_library_viewmodel.dart';
 
 class ExercisePickerDialog extends ConsumerStatefulWidget {
@@ -152,7 +153,7 @@ class _ExercisePickerDialogState extends ConsumerState<ExercisePickerDialog>
         ),
         Expanded(
           child: state.isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const ShimmerExerciseList()
               : filtered.isEmpty
                   ? _buildEmptyLibrary(state.exercises.isEmpty)
                   : ListView.builder(

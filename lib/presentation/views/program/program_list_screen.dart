@@ -7,6 +7,7 @@ import '../../../core/constants/app_sizes.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../viewmodels/program_viewmodel.dart';
+import '../../widgets/shimmer_loading.dart';
 
 class ProgramListScreen extends ConsumerWidget {
   const ProgramListScreen({super.key});
@@ -36,7 +37,10 @@ class ProgramListScreen extends ConsumerWidget {
 
   Widget _buildBody(BuildContext context, WidgetRef ref, ProgramState state) {
     if (state.isLoading && state.programs.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const Padding(
+        padding: EdgeInsets.all(AppSizes.spacing16),
+        child: ShimmerProgramList(itemCount: 5),
+      );
     }
 
     if (state.errorMessage != null) {

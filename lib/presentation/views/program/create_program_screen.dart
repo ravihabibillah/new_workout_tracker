@@ -8,6 +8,7 @@ import '../../../core/utils/validators.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../../domain/entities/exercise_entity.dart';
 import '../../viewmodels/program_viewmodel.dart';
+import '../../widgets/shimmer_loading.dart';
 import '../exercise/exercise_picker_dialog.dart';
 
 class CreateProgramScreen extends ConsumerStatefulWidget {
@@ -96,7 +97,7 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ShimmerWorkoutScreen()
           : GestureDetector(
               onTap: () => FocusScope.of(context).unfocus(),
               behavior: HitTestBehavior.opaque,

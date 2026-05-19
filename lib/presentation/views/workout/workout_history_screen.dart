@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../domain/entities/workout_session_entity.dart';
 import '../../viewmodels/program_viewmodel.dart';
+import '../../widgets/shimmer_loading.dart';
 
 final workoutHistoryProvider = FutureProvider<List<WorkoutSessionEntity>>((ref) async {
   final repository = ref.watch(workoutRepositoryProvider);
@@ -25,7 +26,7 @@ class WorkoutHistoryScreen extends ConsumerWidget {
       ),
       body: historyAsync.when(
         data: (sessions) => _buildHistoryList(context, sessions),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const ShimmerHistoryList(),
         error: (error, stack) => _buildErrorState(context, error.toString()),
       ),
     );

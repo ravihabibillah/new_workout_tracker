@@ -7,6 +7,7 @@ import '../../../core/extensions/context_extensions.dart';
 import '../../../core/utils/validators.dart';
 import '../../../domain/entities/exercise_library_entity.dart';
 import '../../viewmodels/exercise_library_viewmodel.dart';
+import '../../widgets/shimmer_loading.dart';
 
 class ExerciseLibraryScreen extends ConsumerStatefulWidget {
   const ExerciseLibraryScreen({super.key});
@@ -47,8 +48,8 @@ class _ExerciseLibraryScreenState
         children: [
           _buildSearchAndFilter(state),
           Expanded(
-            child: state.isLoading
-                ? const Center(child: CircularProgressIndicator())
+          child: state.isLoading
+              ? const ShimmerExerciseList()
                 : filtered.isEmpty
                     ? _buildEmptyState(state.exercises.isEmpty)
                     : _buildExerciseList(filtered),

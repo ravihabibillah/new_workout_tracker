@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../viewmodels/progress_viewmodel.dart';
+import '../../widgets/shimmer_loading.dart';
 
 enum ProgressMetric { maxWeight, totalVolume, maxReps }
 
@@ -103,10 +104,10 @@ class _ExerciseProgressScreenState
       body: progressAsync.when(
         data: (progressData) => recordsAsync.when(
           data: (records) => _buildContent(context, progressData, records),
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const ShimmerProgressScreen(),
           error: (e, s) => Center(child: Text('Error: $e')),
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const ShimmerProgressScreen(),
         error: (error, stack) => Center(child: Text('Error: $error')),
       ),
     );
