@@ -231,6 +231,72 @@ void main() {
       expect(result.id, 's1');
     });
 
+    test('startQuickWorkoutSession returns mapped entity with isQuickWorkout true', () async {
+      final quickSession = WorkoutSessionModel(
+        id: 'qs1',
+        userId: 'u1',
+        programId: null,
+        programName: 'Quick Workout',
+        startTime: startTime,
+        exerciseLogs: const [],
+        isQuickWorkout: true,
+      );
+      when(mockDataSource.startQuickWorkoutSession(
+        programName: 'Quick Workout',
+        useRestTimer: false,
+        restTimerDuration: 90,
+      )).thenAnswer((_) async => quickSession);
+
+      final result = await repository.startQuickWorkoutSession();
+
+      expect(result, isA<WorkoutSessionEntity>());
+      expect(result.id, 'qs1');
+      expect(result.programId, isNull);
+      expect(result.isQuickWorkout, true);
+    });
+
+    test('startQuickWorkoutSession with custom params', () async {
+      final quickSession = WorkoutSessionModel(
+        id: 'qs2',
+        userId: 'u1',
+        programId: null,
+        programName: 'My Quick',
+        startTime: startTime,
+        exerciseLogs: const [],
+        isQuickWorkout: true,
+        useRestTimer: true,
+        restTimerDuration: 60,
+      );
+      when(mockDataSource.startQuickWorkoutSession(
+        programName: 'My Quick',
+        useRestTimer: true,
+        restTimerDuration: 60,
+      )).thenAnswer((_) async => quickSession);
+
+      final result = await repository.startQuickWorkoutSession(
+        programName: 'My Quick',
+        useRestTimer: true,
+        restTimerDuration: 60,
+      );
+
+      expect(result.programName, 'My Quick');
+      expect(result.useRestTimer, true);
+      expect(result.restTimerDuration, 60);
+    });
+
+    test('startQuickWorkoutSession throws ServerFailure on ServerException', () {
+      when(mockDataSource.startQuickWorkoutSession(
+        programName: anyNamed('programName'),
+        useRestTimer: anyNamed('useRestTimer'),
+        restTimerDuration: anyNamed('restTimerDuration'),
+      )).thenThrow(const ServerException(message: 'quick start failed'));
+
+      expect(
+        () => repository.startQuickWorkoutSession(),
+        throwsA(isA<ServerFailure>()),
+      );
+    });
+
     test('completeWorkoutSession delegates to datasource', () async {
       when(mockDataSource.completeWorkoutSession('s1'))
           .thenAnswer((_) async => makeSession(id: 's1'));

@@ -26,6 +26,17 @@ WorkoutSessionEntity _session({
       exerciseLogs: logs,
     );
 
+WorkoutSessionEntity _quickSession({String id = 'qs1'}) =>
+    WorkoutSessionEntity(
+      id: id,
+      userId: 'u1',
+      programId: null,
+      programName: 'Quick Workout',
+      startTime: DateTime(2026, 5, 1, 9, 0),
+      exerciseLogs: const [],
+      isQuickWorkout: true,
+    );
+
 ProviderContainer _makeContainer(IWorkoutRepository repo) {
   return ProviderContainer(
     overrides: [
@@ -135,6 +146,69 @@ void main() {
 
       final state = container.read(workoutViewModelProvider);
       expect(state.errorMessage, 'start failed');
+      expect(state.isLoading, false);
+    });
+  });
+
+  group('WorkoutViewModel.startQuickWorkout', () {
+    test('sets activeSession on success with default params', () async {
+      final session = _quickSession();
+      when(mockRepo.startQuickWorkoutSession(
+        programName: 'Quick Workout',
+        useRestTimer: false,
+        restTimerDuration: 90,
+      )).thenAnswer((_) async => session);
+
+      final notifier = container.read(workoutViewModelProvider.notifier);
+      await notifier.startQuickWorkout();
+
+      final state = container.read(workoutViewModelProvider);
+      expect(state.activeSession, session);
+      expect(state.activeSession?.isQuickWorkout, true);
+      expect(state.activeSession?.programId, isNull);
+      expect(state.isLoading, false);
+    });
+
+    test('passes custom params to repository', () async {
+      final session = _quickSession();
+      when(mockRepo.startQuickWorkoutSession(
+        programName: 'My Custom',
+        useRestTimer: true,
+        restTimerDuration: 60,
+      )).thenAnswer((_) async => session);
+
+      final notifier = container.read(workoutViewModelProvider.notifier);
+      await notifier.startQuickWorkout(
+        programName: 'My Custom',
+        useRestTimer: true,
+        restTimerDuration: 60,
+      );
+
+      verify(mockRepo.startQuickWorkoutSession(
+        programName: 'My Custom',
+        useRestTimer: true,
+        restTimerDuration: 60,
+      )).called(1);
+    });
+
+    test('rethrows Failure and sets errorMessage', () async {
+      when(mockRepo.startQuickWorkoutSession(
+        programName: anyNamed('programName'),
+        useRestTimer: anyNamed('useRestTimer'),
+        restTimerDuration: anyNamed('restTimerDuration'),
+      )).thenAnswer((_) async => throw const ServerFailure(message: 'quick start failed'));
+
+      final notifier = container.read(workoutViewModelProvider.notifier);
+
+      try {
+        await notifier.startQuickWorkout();
+        fail('Expected ServerFailure to be thrown');
+      } on ServerFailure catch (e) {
+        expect(e.message, 'quick start failed');
+      }
+
+      final state = container.read(workoutViewModelProvider);
+      expect(state.errorMessage, 'quick start failed');
       expect(state.isLoading, false);
     });
   });
