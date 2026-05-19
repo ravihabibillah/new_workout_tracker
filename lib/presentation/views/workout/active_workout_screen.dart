@@ -90,8 +90,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
 
     return WillPopScope(
       onWillPop: () async {
-        final shouldPop = await _showCancelConfirmation();
-        return shouldPop ?? false;
+        return true;
       },
       child: Scaffold(
         backgroundColor: AppColors.background,
@@ -110,7 +109,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.close),
+              icon: const Icon(Icons.delete_outline),
+              tooltip: 'Cancel workout',
+              color: AppColors.error,
               onPressed: () async {
                 final shouldCancel = await _showCancelConfirmation();
                 if (shouldCancel == true && mounted) {
