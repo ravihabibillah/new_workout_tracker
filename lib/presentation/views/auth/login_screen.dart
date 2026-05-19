@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_sizes.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 
@@ -76,6 +77,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           const FaIcon(
                             FontAwesomeIcons.google,
                             size: 20,
+                            color: AppColors.background,
                           ),
                           const SizedBox(width: AppSizes.spacing12),
                           Text(AppStrings.signInWithGoogle),
