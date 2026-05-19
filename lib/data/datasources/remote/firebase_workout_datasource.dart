@@ -6,16 +6,20 @@ import '../../models/workout_session_model.dart';
 import '../../models/exercise_log_model.dart';
 import '../../models/exercise_library_model.dart';
 import '../../seed/default_exercises.dart';
+import '../local/exercise_library_cache.dart';
 
 class FirebaseWorkoutDataSource {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _firebaseAuth;
+  final ExerciseLibraryCache? _libraryCache;
 
   FirebaseWorkoutDataSource({
     required FirebaseFirestore firestore,
     required FirebaseAuth firebaseAuth,
+    ExerciseLibraryCache? libraryCache,
   })  : _firestore = firestore,
-        _firebaseAuth = firebaseAuth;
+        _firebaseAuth = firebaseAuth,
+        _libraryCache = libraryCache;
 
   String get _userId {
     final uid = _firebaseAuth.currentUser?.uid;
@@ -306,22 +310,57 @@ class FirebaseWorkoutDataSource {
   // The exercise library is a *global* root-level collection shared across
   // all users. Default exercises are seeded once globally; users can also
   // add their own custom exercises (with `userId` set).
+  //
+  // Cache strategy (Hive):
+  // - Return cache immediately if not empty (fast, offline-capable)
+  // - Sync from Firestore in background if cache is stale (TTL: 7 days)
+  // - Force sync if cache is empty
 
   CollectionReference<Map<String, dynamic>> get _libraryRef =>
       _firestore.collection('exercises');
 
   Future<List<ExerciseLibraryModel>> getExerciseLibrary() async {
     try {
+      final cache = _libraryCache;
+
+      if (cache != null) {
+        if (!cache.isEmpty) {
+          if (cache.isStale) {
+            _syncLibraryToCache(cache);
+          }
+          return cache.getAll();
+        }
+      }
+
       await _seedDefaultExercisesIfNeeded();
-      final snapshot =
-          await _libraryRef.orderBy('name').get();
-      return snapshot.docs
-          .map((doc) =>
-              ExerciseLibraryModel.fromJson({...doc.data(), 'id': doc.id}))
-          .toList();
+      final exercises = await _fetchLibraryFromFirestore();
+
+      if (cache != null) {
+        await cache.replaceAll(exercises);
+      }
+
+      return exercises;
     } catch (e) {
+      final cache = _libraryCache;
+      if (cache != null && !cache.isEmpty) {
+        return cache.getAll();
+      }
       throw ServerException(message: 'Failed to get exercise library: $e');
     }
+  }
+
+  Future<List<ExerciseLibraryModel>> _fetchLibraryFromFirestore() async {
+    final snapshot = await _libraryRef.orderBy('name').get();
+    return snapshot.docs
+        .map((doc) =>
+            ExerciseLibraryModel.fromJson({...doc.data(), 'id': doc.id}))
+        .toList();
+  }
+
+  void _syncLibraryToCache(ExerciseLibraryCache cache) {
+    _fetchLibraryFromFirestore().then((exercises) {
+      cache.replaceAll(exercises);
+    }).catchError((_) {});
   }
 
   /// Seeds the default exercise list into the *global* exercises collection
@@ -376,6 +415,11 @@ class FirebaseWorkoutDataSource {
     String exerciseId,
   ) async {
     try {
+      final cache = _libraryCache;
+      if (cache != null && !cache.isEmpty) {
+        final cached = cache.getAll().where((e) => e.id == exerciseId);
+        if (cached.isNotEmpty) return cached.first;
+      }
       final doc = await _libraryRef.doc(exerciseId).get();
       if (!doc.exists) return null;
       return ExerciseLibraryModel.fromJson({...doc.data()!, 'id': doc.id});
@@ -389,12 +433,13 @@ class FirebaseWorkoutDataSource {
   ) async {
     try {
       final data = exercise.toJson();
-      // Tag user-created exercises with the creator's userId so we can
-      // distinguish them from globally-seeded defaults.
       data['userId'] = _userId;
       final docRef = await _libraryRef.add(data);
       final doc = await docRef.get();
-      return ExerciseLibraryModel.fromJson({...doc.data()!, 'id': doc.id});
+      final created =
+          ExerciseLibraryModel.fromJson({...doc.data()!, 'id': doc.id});
+      await _libraryCache?.upsert(created);
+      return created;
     } catch (e) {
       throw ServerException(message: 'Failed to create library exercise: $e');
     }
@@ -405,6 +450,7 @@ class FirebaseWorkoutDataSource {
   ) async {
     try {
       await _libraryRef.doc(exercise.id).update(exercise.toJson());
+      await _libraryCache?.upsert(exercise);
       return exercise;
     } catch (e) {
       throw ServerException(message: 'Failed to update library exercise: $e');
@@ -414,6 +460,7 @@ class FirebaseWorkoutDataSource {
   Future<void> deleteLibraryExercise(String exerciseId) async {
     try {
       await _libraryRef.doc(exerciseId).delete();
+      await _libraryCache?.remove(exerciseId);
     } catch (e) {
       throw ServerException(message: 'Failed to delete library exercise: $e');
     }

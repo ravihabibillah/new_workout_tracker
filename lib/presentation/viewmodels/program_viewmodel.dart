@@ -9,10 +9,20 @@ import '../../domain/usecases/update_program_usecase.dart';
 import '../../domain/usecases/delete_program_usecase.dart';
 import '../../data/repositories/workout_repository_impl.dart';
 import '../../data/datasources/remote/firebase_workout_datasource.dart';
+import '../../data/datasources/local/exercise_library_cache.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 part 'program_viewmodel.g.dart';
+
+/// Provider for the local Hive cache. Overridden in `main()` after Hive is
+/// initialized so the rest of the app can read it synchronously.
+@Riverpod(keepAlive: true)
+ExerciseLibraryCache exerciseLibraryCache(ExerciseLibraryCacheRef ref) {
+  throw UnimplementedError(
+    'exerciseLibraryCacheProvider must be overridden in main()',
+  );
+}
 
 /// Workout repository provider
 @riverpod
@@ -21,6 +31,7 @@ IWorkoutRepository workoutRepository(WorkoutRepositoryRef ref) {
     dataSource: FirebaseWorkoutDataSource(
       firestore: FirebaseFirestore.instance,
       firebaseAuth: FirebaseAuth.instance,
+      libraryCache: ref.watch(exerciseLibraryCacheProvider),
     ),
   );
 }

@@ -4,6 +4,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
+import 'data/datasources/local/exercise_library_cache.dart';
+import 'presentation/viewmodels/program_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,9 +15,16 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  // Initialize local cache (Hive) for the global exercise library.
+  final exerciseLibraryCache = ExerciseLibraryCache();
+  await exerciseLibraryCache.init();
+
   runApp(
-    const ProviderScope(
-      child: MyApp(),
+    ProviderScope(
+      overrides: [
+        exerciseLibraryCacheProvider.overrideWithValue(exerciseLibraryCache),
+      ],
+      child: const MyApp(),
     ),
   );
 }
