@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:vibration/vibration.dart';
 import '../../core/errors/failure.dart';
 import '../../domain/entities/workout_session_entity.dart';
 import '../../domain/entities/exercise_log_entity.dart';
@@ -252,14 +253,20 @@ class WorkoutViewModel extends _$WorkoutViewModel {
     await _updateSession(updatedSession);
   }
 
-  void startRestTimer(int seconds) {
+  void startRestTimer(int seconds, {bool vibrateOnComplete = false}) {
     _restTimer?.cancel();
     state = state.copyWith(restTimerSeconds: seconds, isRestTimerActive: true);
-    _restTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _restTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
       final current = state.restTimerSeconds ?? 0;
       if (current <= 1) {
         timer.cancel();
         state = state.copyWith(restTimerSeconds: 0, isRestTimerActive: false);
+        if (vibrateOnComplete) {
+          final hasVibrator = await Vibration.hasVibrator();
+          if (hasVibrator) {
+            Vibration.vibrate(duration: 500, amplitude: 255);
+          }
+        }
       } else {
         state = state.copyWith(restTimerSeconds: current - 1);
       }

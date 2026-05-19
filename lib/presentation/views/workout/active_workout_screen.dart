@@ -109,6 +109,11 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
           ),
           actions: [
             IconButton(
+              icon: const Icon(Icons.timer_outlined),
+              tooltip: 'Set timer',
+              onPressed: () => _showTimerPickerDialog(),
+            ),
+            IconButton(
               icon: const Icon(Icons.delete_outline),
               tooltip: 'Cancel workout',
               color: AppColors.error,
@@ -432,6 +437,19 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
     }
   }
 
+  Future<void> _showTimerPickerDialog() async {
+    final seconds = await showDialog<int>(
+      context: context,
+      builder: (context) => const _TimerPickerDialog(),
+    );
+
+    if (seconds != null && seconds > 0 && mounted) {
+      ref
+          .read(workoutViewModelProvider.notifier)
+          .startRestTimer(seconds, vibrateOnComplete: true);
+    }
+  }
+
   Future<bool?> _showCancelConfirmation() async {
     return showDialog<bool>(
       context: context,
@@ -749,5 +767,125 @@ class _SaveAsProgramDialogState extends State<_SaveAsProgramDialog> {
         ),
       ],
     );
+  }
+}
+
+class _TimerPickerDialog extends StatefulWidget {
+  const _TimerPickerDialog();
+
+  @override
+  State<_TimerPickerDialog> createState() => _TimerPickerDialogState();
+}
+
+class _TimerPickerDialogState extends State<_TimerPickerDialog> {
+  int _minutes = 1;
+  int _seconds = 30;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Set Timer'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildNumberPicker(
+                value: _minutes,
+                minValue: 0,
+                maxValue: 10,
+                label: 'min',
+                onChanged: (value) => setState(() => _minutes = value),
+              ),
+              const SizedBox(width: AppSizes.spacing16),
+              const Text(
+                ':',
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(width: AppSizes.spacing16),
+              _buildNumberPicker(
+                value: _seconds,
+                minValue: 0,
+                maxValue: 59,
+                label: 'sec',
+                onChanged: (value) => setState(() => _seconds = value),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSizes.spacing16),
+          Text(
+            'Total: ${_formatDuration(_minutes * 60 + _seconds)}',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: (_minutes > 0 || _seconds > 0)
+              ? () => Navigator.pop(context, _minutes * 60 + _seconds)
+              : null,
+          child: const Text('Start'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNumberPicker({
+    required int value,
+    required int minValue,
+    required int maxValue,
+    required String label,
+    required ValueChanged<int> onChanged,
+  }) {
+    return Column(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.keyboard_arrow_up),
+          onPressed: value < maxValue ? () => onChanged(value + 1) : null,
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.spacing16,
+            vertical: AppSizes.spacing8,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceSecondary,
+            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+          ),
+          child: Text(
+            value.toString().padLeft(2, '0'),
+            style: const TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.keyboard_arrow_down),
+          onPressed: value > minValue ? () => onChanged(value - 1) : null,
+        ),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.textSecondary,
+              ),
+        ),
+      ],
+    );
+  }
+
+  String _formatDuration(int totalSeconds) {
+    final minutes = totalSeconds ~/ 60;
+    final seconds = totalSeconds % 60;
+    if (minutes == 0) return '${seconds}s';
+    if (seconds == 0) return '${minutes}m';
+    return '${minutes}m ${seconds}s';
   }
 }
