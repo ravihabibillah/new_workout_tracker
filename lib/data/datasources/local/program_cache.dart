@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../models/program_model.dart';
 
@@ -11,9 +12,16 @@ class ProgramCache {
   static const String _userIdKey = 'userId';
   static const String _lastSyncKey = 'lastSync';
 
-  late final Box<Map> _programsBox;
-  late final Box<dynamic> _metaBox;
+  late Box<Map> _programsBox;
+  late Box<dynamic> _metaBox;
   bool _initialized = false;
+
+  @visibleForTesting
+  void injectBoxesForTest(Box<Map> programsBox, Box<dynamic> metaBox) {
+    _programsBox = programsBox;
+    _metaBox = metaBox;
+    _initialized = true;
+  }
 
   Future<void> init() async {
     if (_initialized) return;

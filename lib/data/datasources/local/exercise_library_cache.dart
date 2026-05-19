@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../models/exercise_library_model.dart';
 
@@ -14,9 +15,16 @@ class ExerciseLibraryCache {
   /// How long the cache is considered fresh before triggering a remote sync.
   static const Duration cacheTtl = Duration(days: 7);
 
-  late final Box<Map> _exercisesBox;
-  late final Box<dynamic> _metaBox;
+  late Box<Map> _exercisesBox;
+  late Box<dynamic> _metaBox;
   bool _initialized = false;
+
+  @visibleForTesting
+  void injectBoxesForTest(Box<Map> exercisesBox, Box<dynamic> metaBox) {
+    _exercisesBox = exercisesBox;
+    _metaBox = metaBox;
+    _initialized = true;
+  }
 
   Future<void> init() async {
     if (_initialized) return;
