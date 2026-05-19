@@ -6,6 +6,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/extensions/context_extensions.dart';
+import '../../../core/utils/global_keys.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../viewmodels/program_viewmodel.dart';
 import '../../viewmodels/workout_viewmodel.dart';
@@ -326,9 +327,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             onPressed: () async {
               Navigator.pop(context);
               await ref.read(authViewModelProvider.notifier).signOut();
-              if (context.mounted) {
-                context.showSnackBar('Logged out successfully');
-              }
+              scaffoldMessengerKey.currentState?.showSnackBar(
+                const SnackBar(
+                  content: Text('Logged out successfully'),
+                  backgroundColor: Colors.green,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
             },
             child: const Text(
               'Logout',
