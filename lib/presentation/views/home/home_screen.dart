@@ -101,9 +101,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       color: AppColors.primary.withOpacity(0.1),
       child: InkWell(
         onTap: () {
-          context.push(
-            AppRoutes.workout.replaceAll(':programId', session.programId),
-          );
+          if (session.isQuickWorkout || session.programId == null) {
+            context.push(AppRoutes.quickWorkout);
+          } else {
+            context.push(
+              AppRoutes.workout.replaceAll(':programId', session.programId!),
+            );
+          }
         },
         child: Padding(
           padding: const EdgeInsets.all(AppSizes.spacing16),
@@ -333,33 +337,82 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _showStartWorkoutDialog(BuildContext context, WidgetRef ref) {
     final programs = ref.read(programViewModelProvider).programs;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Select Program'),
-        content: programs.isEmpty
-            ? const Text('Create a program first')
-            : SizedBox(
-                width: double.maxFinite,
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: programs.length,
-                  itemBuilder: (context, index) {
-                    final program = programs[index];
-                    return ListTile(
-                      title: Text(program.name),
-                      subtitle: Text('${program.exercises.length} exercises'),
-                      onTap: () {
-                        Navigator.pop(context);
-                        context.push(
-                          AppRoutes.workout.replaceAll(':programId', program.id),
-                        );
-                      },
-                    );
+        title: const Text('Start Workout'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Card(
+                color: AppColors.primary.withOpacity(0.1),
+                child: ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(AppSizes.spacing8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                    ),
+                    child: const Icon(
+                      Icons.flash_on,
+                      color: AppColors.background,
+                    ),
+                  ),
+                  title: const Text(
+                    'Quick Start',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: const Text('Workout without a program'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.push(AppRoutes.quickWorkout);
                   },
                 ),
               ),
+              const SizedBox(height: AppSizes.spacing16),
+              if (programs.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: AppSizes.spacing16),
+                  child: Text('No programs yet. Create one or start a quick workout.'),
+                )
+              else ...[
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Or pick a program',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                  ),
+                ),
+                const SizedBox(height: AppSizes.spacing8),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 280),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: programs.length,
+                    itemBuilder: (context, index) {
+                      final program = programs[index];
+                      return ListTile(
+                        title: Text(program.name),
+                        subtitle: Text('${program.exercises.length} exercises'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push(
+                            AppRoutes.workout.replaceAll(':programId', program.id),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
