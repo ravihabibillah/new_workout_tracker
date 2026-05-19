@@ -778,8 +778,50 @@ class _TimerPickerDialog extends StatefulWidget {
 }
 
 class _TimerPickerDialogState extends State<_TimerPickerDialog> {
-  int _minutes = 1;
-  int _seconds = 30;
+  late final TextEditingController _minutesController;
+  late final TextEditingController _secondsController;
+  late final FocusNode _minutesFocus;
+  late final FocusNode _secondsFocus;
+
+  @override
+  void initState() {
+    super.initState();
+    _minutesController = TextEditingController(text: '1');
+    _secondsController = TextEditingController(text: '30');
+    _minutesFocus = FocusNode()..addListener(_onMinutesFocus);
+    _secondsFocus = FocusNode()..addListener(_onSecondsFocus);
+  }
+
+  void _onMinutesFocus() {
+    if (_minutesFocus.hasFocus) {
+      _minutesController.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _minutesController.text.length,
+      );
+    }
+  }
+
+  void _onSecondsFocus() {
+    if (_secondsFocus.hasFocus) {
+      _secondsController.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _secondsController.text.length,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _minutesController.dispose();
+    _secondsController.dispose();
+    _minutesFocus.dispose();
+    _secondsFocus.dispose();
+    super.dispose();
+  }
+
+  int get _minutes => int.tryParse(_minutesController.text) ?? 0;
+  int get _seconds => int.tryParse(_secondsController.text) ?? 0;
+  int get _totalSeconds => (_minutes * 60 + _seconds).clamp(0, 600);
 
   @override
   Widget build(BuildContext context) {
@@ -791,12 +833,30 @@ class _TimerPickerDialogState extends State<_TimerPickerDialog> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildNumberPicker(
-                value: _minutes,
-                minValue: 0,
-                maxValue: 10,
-                label: 'min',
-                onChanged: (value) => setState(() => _minutes = value),
+              SizedBox(
+                width: 70,
+                child: TextField(
+                  controller: _minutesController,
+                  focusNode: _minutesFocus,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+              const SizedBox(width: AppSizes.spacing8),
+              Text(
+                'min',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
               ),
               const SizedBox(width: AppSizes.spacing16),
               const Text(
@@ -804,18 +864,36 @@ class _TimerPickerDialogState extends State<_TimerPickerDialog> {
                 style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
               ),
               const SizedBox(width: AppSizes.spacing16),
-              _buildNumberPicker(
-                value: _seconds,
-                minValue: 0,
-                maxValue: 59,
-                label: 'sec',
-                onChanged: (value) => setState(() => _seconds = value),
+              SizedBox(
+                width: 70,
+                child: TextField(
+                  controller: _secondsController,
+                  focusNode: _secondsFocus,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+              const SizedBox(width: AppSizes.spacing8),
+              Text(
+                'sec',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
               ),
             ],
           ),
           const SizedBox(height: AppSizes.spacing16),
           Text(
-            'Total: ${_formatDuration(_minutes * 60 + _seconds)}',
+            'Total: ${_formatDuration(_totalSeconds)}',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -828,54 +906,10 @@ class _TimerPickerDialogState extends State<_TimerPickerDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: (_minutes > 0 || _seconds > 0)
-              ? () => Navigator.pop(context, _minutes * 60 + _seconds)
+          onPressed: _totalSeconds > 0
+              ? () => Navigator.pop(context, _totalSeconds)
               : null,
           child: const Text('Start'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNumberPicker({
-    required int value,
-    required int minValue,
-    required int maxValue,
-    required String label,
-    required ValueChanged<int> onChanged,
-  }) {
-    return Column(
-      children: [
-        IconButton(
-          icon: const Icon(Icons.keyboard_arrow_up),
-          onPressed: value < maxValue ? () => onChanged(value + 1) : null,
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.spacing16,
-            vertical: AppSizes.spacing8,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceSecondary,
-            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-          ),
-          child: Text(
-            value.toString().padLeft(2, '0'),
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.keyboard_arrow_down),
-          onPressed: value > minValue ? () => onChanged(value - 1) : null,
-        ),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-              ),
         ),
       ],
     );
