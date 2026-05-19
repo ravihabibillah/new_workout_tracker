@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:uuid/uuid.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_sizes.dart';
@@ -9,6 +8,7 @@ import '../../../core/utils/validators.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../../domain/entities/exercise_entity.dart';
 import '../../viewmodels/program_viewmodel.dart';
+import '../exercise/exercise_picker_dialog.dart';
 
 class CreateProgramScreen extends ConsumerStatefulWidget {
   final String? programId;
@@ -93,24 +93,28 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(AppSizes.spacing16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildProgramInfoSection(),
-                          const SizedBox(height: AppSizes.spacing24),
-                          _buildExercisesSection(),
-                        ],
+          : GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              behavior: HitTestBehavior.opaque,
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(AppSizes.spacing16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildProgramInfoSection(),
+                            const SizedBox(height: AppSizes.spacing24),
+                            _buildExercisesSection(),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
       floatingActionButton: FloatingActionButton.extended(
@@ -154,6 +158,7 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                 prefixIcon: Icon(Icons.description),
               ),
               maxLines: 3,
+              textInputAction: TextInputAction.done,
               textCapitalization: TextCapitalization.sentences,
             ),
           ],
@@ -281,93 +286,24 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
     );
   }
 
-  void _showAddExerciseDialog() {
-    final nameController = TextEditingController();
-    String selectedMuscleGroup = AppStrings.chest;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(AppStrings.addExercise),
-        content: StatefulBuilder(
-          builder: (context, setDialogState) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: AppStrings.exerciseName,
-                    hintText: 'e.g., Bench Press',
-                    prefixIcon: Icon(Icons.fitness_center),
-                  ),
-                  textCapitalization: TextCapitalization.words,
-                  autofocus: true,
-                ),
-                const SizedBox(height: AppSizes.spacing16),
-                DropdownButtonFormField<String>(
-                  value: selectedMuscleGroup,
-                  decoration: const InputDecoration(
-                    labelText: AppStrings.muscleGroup,
-                    prefixIcon: Icon(Icons.category),
-                  ),
-                  items: [
-                    AppStrings.chest,
-                    AppStrings.back,
-                    AppStrings.shoulders,
-                    AppStrings.arms,
-                    AppStrings.legs,
-                    AppStrings.core,
-                    AppStrings.fullBody,
-                  ].map((group) {
-                    return DropdownMenuItem(
-                      value: group,
-                      child: Text(group),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setDialogState(() {
-                        selectedMuscleGroup = value;
-                      });
-                    }
-                  },
-                ),
-              ],
-            );
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(AppStrings.cancel),
-          ),
-          TextButton(
-            onPressed: () {
-              if (nameController.text.trim().isEmpty) {
-                context.showErrorSnackBar('Please enter exercise name');
-                return;
-              }
-
-              final exercise = ExerciseEntity(
-                id: const Uuid().v4(),
-                name: nameController.text.trim(),
-                muscleGroup: selectedMuscleGroup,
-                order: _exercises.length,
-              );
-
-              setState(() {
-                _exercises.add(exercise);
-              });
-
-              Navigator.pop(context);
-              context.showSnackBar('Exercise added');
-            },
-            child: const Text(AppStrings.save),
-          ),
-        ],
-      ),
+  void _showAddExerciseDialog() async {
+    final exercises = await showExercisePickerDialog(
+      context,
+      existingExercises: _exercises,
     );
+
+    if (exercises != null && exercises.isNotEmpty && mounted) {
+      setState(() {
+        for (final exercise in exercises) {
+          _exercises.add(exercise.copyWith(order: _exercises.length));
+        }
+      });
+      context.showSnackBar(
+        exercises.length == 1
+            ? 'Exercise added'
+            : '${exercises.length} exercises added',
+      );
+    }
   }
 
   void _removeExercise(int index) {

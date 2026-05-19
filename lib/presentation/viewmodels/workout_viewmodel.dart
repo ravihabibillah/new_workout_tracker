@@ -25,14 +25,16 @@ class WorkoutState {
   });
 
   WorkoutState copyWith({
-    WorkoutSessionEntity? activeSession,
+    Object? activeSession = _sentinel,
     bool? isLoading,
     String? errorMessage,
     int? restTimerSeconds,
     bool? isRestTimerActive,
   }) {
     return WorkoutState(
-      activeSession: activeSession ?? this.activeSession,
+      activeSession: identical(activeSession, _sentinel)
+          ? this.activeSession
+          : activeSession as WorkoutSessionEntity?,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
       restTimerSeconds: restTimerSeconds ?? this.restTimerSeconds,
@@ -40,6 +42,8 @@ class WorkoutState {
     );
   }
 }
+
+const _sentinel = Object();
 
 @riverpod
 class WorkoutViewModel extends _$WorkoutViewModel {

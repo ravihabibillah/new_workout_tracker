@@ -166,6 +166,18 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(width: AppSizes.spacing12),
             Expanded(
               child: _QuickActionCard(
+                icon: Icons.fitness_center,
+                label: 'Exercises',
+                onTap: () => context.push(AppRoutes.exerciseLibrary),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSizes.spacing12),
+        Row(
+          children: [
+            Expanded(
+              child: _QuickActionCard(
                 icon: Icons.history,
                 label: 'History',
                 onTap: () => context.push(AppRoutes.workoutHistory),

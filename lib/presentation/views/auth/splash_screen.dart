@@ -14,9 +14,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    print('🟢 SPLASH: Screen initialized');
-    
-    // Add timeout to prevent infinite loading
     Future.delayed(const Duration(seconds: 10), () {
       if (mounted) {
         print('⚠️ SPLASH: Timeout reached - still on splash screen');
@@ -27,8 +24,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print('🔵 SPLASH: Building splash screen');
-    
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Center(

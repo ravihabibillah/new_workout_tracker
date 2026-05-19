@@ -33,6 +33,20 @@ class AppStrings {
   static const String muscleGroup = 'Muscle Group';
   static const String deleteExercise = 'Delete Exercise';
 
+  // Exercise Library
+  static const String exerciseLibrary = 'Exercise Library';
+  static const String myExercises = 'My Exercises';
+  static const String createExercise = 'Create Exercise';
+  static const String editExercise = 'Edit Exercise';
+  static const String exerciseDescription = 'Description (optional)';
+  static const String noExercisesInLibrary = 'No exercises yet';
+  static const String createFirstExercise = 'Create your first exercise!';
+  static const String selectFromLibrary = 'Select from Library';
+  static const String createNewExercise = 'Create New Exercise';
+  static const String allMuscleGroups = 'All';
+  static const String searchExercises = 'Search exercises';
+  static const String noMatchingExercises = 'No matching exercises';
+
   // Workout
   static const String workout = 'Workout';
   static const String activeWorkout = 'Active Workout';
@@ -82,6 +96,7 @@ class AppStrings {
   static const String legs = 'Legs';
   static const String core = 'Core';
   static const String fullBody = 'Full Body';
+  static const String cardio = 'Cardio';
 
   // Actions
   static const String save = 'Save';

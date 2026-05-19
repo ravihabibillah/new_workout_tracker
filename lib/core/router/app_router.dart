@@ -7,6 +7,7 @@ import '../../presentation/views/home/home_screen.dart';
 import '../../presentation/views/program/program_list_screen.dart';
 import '../../presentation/views/program/program_detail_screen.dart';
 import '../../presentation/views/program/create_program_screen.dart';
+import '../../presentation/views/exercise/exercise_library_screen.dart';
 import '../../presentation/views/workout/active_workout_screen.dart';
 import '../../presentation/views/workout/workout_history_screen.dart';
 import '../../presentation/views/progress/progress_screen.dart';
@@ -24,6 +25,7 @@ class AppRoutes {
   static const String programDetail = '/programs/:id';
   static const String createProgram = '/programs/create';
   static const String editProgram = '/programs/:id/edit';
+  static const String exerciseLibrary = '/exercises';
   static const String workout = '/workout/:programId';
   static const String workoutHistory = '/workout-history';
   static const String progress = '/progress';
@@ -129,6 +131,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id']!;
           return CreateProgramScreen(programId: id);
         },
+      ),
+      GoRoute(
+        path: AppRoutes.exerciseLibrary,
+        builder: (context, state) => const ExerciseLibraryScreen(),
       ),
       GoRoute(
         path: AppRoutes.workout,

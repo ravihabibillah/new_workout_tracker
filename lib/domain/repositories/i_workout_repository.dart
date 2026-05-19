@@ -1,9 +1,34 @@
 import '../entities/program_entity.dart';
 import '../entities/workout_session_entity.dart';
 import '../entities/exercise_log_entity.dart';
+import '../entities/exercise_library_entity.dart';
 
 /// Workout repository interface
 abstract class IWorkoutRepository {
+  // ========== Exercise Library Operations ==========
+
+  /// Get all exercises in the user's library
+  Future<List<ExerciseLibraryEntity>> getExerciseLibrary();
+
+  /// Get exercise from library by ID
+  Future<ExerciseLibraryEntity?> getExerciseLibraryById(String exerciseId);
+
+  /// Add a new exercise to the library
+  Future<ExerciseLibraryEntity> createLibraryExercise(
+    ExerciseLibraryEntity exercise,
+  );
+
+  /// Update an exercise in the library
+  Future<ExerciseLibraryEntity> updateLibraryExercise(
+    ExerciseLibraryEntity exercise,
+  );
+
+  /// Delete an exercise from the library
+  Future<void> deleteLibraryExercise(String exerciseId);
+
+  /// Stream of exercise library
+  Stream<List<ExerciseLibraryEntity>> watchExerciseLibrary();
+
   // ========== Program Operations ==========
   
   /// Get all programs for current user

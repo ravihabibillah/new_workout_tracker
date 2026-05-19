@@ -45,7 +45,7 @@ class ProgressState {
 class ProgressViewModel extends _$ProgressViewModel {
   @override
   ProgressState build() {
-    loadExerciseNames();
+    Future.microtask(() => loadExerciseNames());
     return const ProgressState(isLoading: true);
   }
 

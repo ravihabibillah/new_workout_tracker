@@ -1,0 +1,36 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===== Per-user data =====
+    // Users can read/write only their own profile, programs, and sessions.
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null
+                        && request.auth.uid == userId;
+    }
+
+    // ===== Global exercise library =====
+    // All authenticated users can read.
+    // Authenticated users can create new exercises only if they tag them
+    // with their own userId. Users can only update/delete exercises they
+    // themselves created (i.e., not the seeded defaults, which have no userId).
+    match /exercises/{exerciseId} {
+      allow read: if request.auth != null;
+
+      allow create: if request.auth != null
+                   && request.resource.data.userId == request.auth.uid;
+
+      allow update, delete: if request.auth != null
+                           && resource.data.userId == request.auth.uid;
+    }
+
+    // ===== Exercise seed marker =====
+    // Used by the client to know if the global exercises collection has
+    // already been seeded. Any authenticated user may read/write this
+    // single marker doc.
+    match /exercises_meta/{docId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

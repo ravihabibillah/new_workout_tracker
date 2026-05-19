@@ -4,6 +4,8 @@ import '../../../core/errors/exceptions.dart';
 import '../../models/program_model.dart';
 import '../../models/workout_session_model.dart';
 import '../../models/exercise_log_model.dart';
+import '../../models/exercise_library_model.dart';
+import '../../seed/default_exercises.dart';
 
 class FirebaseWorkoutDataSource {
   final FirebaseFirestore _firestore;
@@ -298,5 +300,131 @@ class FirebaseWorkoutDataSource {
     } catch (e) {
       throw ServerException(message: 'Failed to get exercise names: $e');
     }
+  }
+
+  // ========== Exercise Library Operations ==========
+  // The exercise library is a *global* root-level collection shared across
+  // all users. Default exercises are seeded once globally; users can also
+  // add their own custom exercises (with `userId` set).
+
+  CollectionReference<Map<String, dynamic>> get _libraryRef =>
+      _firestore.collection('exercises');
+
+  Future<List<ExerciseLibraryModel>> getExerciseLibrary() async {
+    try {
+      await _seedDefaultExercisesIfNeeded();
+      final snapshot =
+          await _libraryRef.orderBy('name').get();
+      return snapshot.docs
+          .map((doc) =>
+              ExerciseLibraryModel.fromJson({...doc.data(), 'id': doc.id}))
+          .toList();
+    } catch (e) {
+      throw ServerException(message: 'Failed to get exercise library: $e');
+    }
+  }
+
+  /// Seeds the default exercise list into the *global* exercises collection
+  /// on first access. Uses a marker doc at `exercises_meta/seed` so seeding
+  /// happens only once across all users.
+  Future<void> _seedDefaultExercisesIfNeeded() async {
+    try {
+      final metaRef =
+          _firestore.collection('exercises_meta').doc('seed');
+
+      final metaSnap = await metaRef.get();
+      if (metaSnap.exists && metaSnap.data()?['seeded'] == true) {
+        return;
+      }
+
+      final existing = await _libraryRef.limit(1).get();
+      if (existing.docs.isNotEmpty) {
+        await metaRef.set({
+          'seeded': true,
+          'seededAt': DateTime.now().toIso8601String(),
+        });
+        return;
+      }
+
+      final now = DateTime.now().toIso8601String();
+      const batchSize = 400;
+      for (var i = 0; i < DefaultExercises.all.length; i += batchSize) {
+        final end = (i + batchSize < DefaultExercises.all.length)
+            ? i + batchSize
+            : DefaultExercises.all.length;
+        final batch = _firestore.batch();
+        for (final exercise in DefaultExercises.all.sublist(i, end)) {
+          final docRef = _libraryRef.doc();
+          batch.set(docRef, {
+            'name': exercise.name,
+            'muscleGroup': exercise.muscleGroup,
+            'description': null,
+            'createdAt': now,
+            'updatedAt': null,
+          });
+        }
+        await batch.commit();
+      }
+
+      await metaRef.set({'seeded': true, 'seededAt': now});
+    } catch (_) {
+      // Seeding is best-effort; do not block library access if it fails.
+    }
+  }
+
+  Future<ExerciseLibraryModel?> getExerciseLibraryById(
+    String exerciseId,
+  ) async {
+    try {
+      final doc = await _libraryRef.doc(exerciseId).get();
+      if (!doc.exists) return null;
+      return ExerciseLibraryModel.fromJson({...doc.data()!, 'id': doc.id});
+    } catch (e) {
+      throw ServerException(message: 'Failed to get library exercise: $e');
+    }
+  }
+
+  Future<ExerciseLibraryModel> createLibraryExercise(
+    ExerciseLibraryModel exercise,
+  ) async {
+    try {
+      final data = exercise.toJson();
+      // Tag user-created exercises with the creator's userId so we can
+      // distinguish them from globally-seeded defaults.
+      data['userId'] = _userId;
+      final docRef = await _libraryRef.add(data);
+      final doc = await docRef.get();
+      return ExerciseLibraryModel.fromJson({...doc.data()!, 'id': doc.id});
+    } catch (e) {
+      throw ServerException(message: 'Failed to create library exercise: $e');
+    }
+  }
+
+  Future<ExerciseLibraryModel> updateLibraryExercise(
+    ExerciseLibraryModel exercise,
+  ) async {
+    try {
+      await _libraryRef.doc(exercise.id).update(exercise.toJson());
+      return exercise;
+    } catch (e) {
+      throw ServerException(message: 'Failed to update library exercise: $e');
+    }
+  }
+
+  Future<void> deleteLibraryExercise(String exerciseId) async {
+    try {
+      await _libraryRef.doc(exerciseId).delete();
+    } catch (e) {
+      throw ServerException(message: 'Failed to delete library exercise: $e');
+    }
+  }
+
+  Stream<List<ExerciseLibraryModel>> watchExerciseLibrary() {
+    return _libraryRef.orderBy('name').snapshots().map(
+          (snapshot) => snapshot.docs
+              .map((doc) => ExerciseLibraryModel.fromJson(
+                  {...doc.data(), 'id': doc.id}))
+              .toList(),
+        );
   }
 }

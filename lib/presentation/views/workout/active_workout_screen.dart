@@ -396,6 +396,8 @@ class _SetRow extends ConsumerStatefulWidget {
 class _SetRowState extends ConsumerState<_SetRow> {
   late final TextEditingController _weightController;
   late final TextEditingController _repsController;
+  late final FocusNode _weightFocusNode;
+  late final FocusNode _repsFocusNode;
 
   @override
   void initState() {
@@ -404,6 +406,26 @@ class _SetRowState extends ConsumerState<_SetRow> {
         TextEditingController(text: _formatNumber(widget.set.weight));
     _repsController =
         TextEditingController(text: _formatNumber(widget.set.reps));
+    _weightFocusNode = FocusNode()..addListener(_onWeightFocus);
+    _repsFocusNode = FocusNode()..addListener(_onRepsFocus);
+  }
+
+  void _onWeightFocus() {
+    if (_weightFocusNode.hasFocus) {
+      _weightController.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _weightController.text.length,
+      );
+    }
+  }
+
+  void _onRepsFocus() {
+    if (_repsFocusNode.hasFocus) {
+      _repsController.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _repsController.text.length,
+      );
+    }
   }
 
   @override
@@ -429,6 +451,8 @@ class _SetRowState extends ConsumerState<_SetRow> {
   void dispose() {
     _weightController.dispose();
     _repsController.dispose();
+    _weightFocusNode.dispose();
+    _repsFocusNode.dispose();
     super.dispose();
   }
 
@@ -477,6 +501,7 @@ class _SetRowState extends ConsumerState<_SetRow> {
                 Expanded(
                   child: TextFormField(
                     controller: _weightController,
+                    focusNode: _weightFocusNode,
                     decoration: const InputDecoration(
                       labelText: 'Weight',
                       suffixText: 'kg',
@@ -505,6 +530,7 @@ class _SetRowState extends ConsumerState<_SetRow> {
                 Expanded(
                   child: TextFormField(
                     controller: _repsController,
+                    focusNode: _repsFocusNode,
                     decoration: const InputDecoration(
                       labelText: 'Reps',
                       isDense: true,

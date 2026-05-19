@@ -3,10 +3,12 @@ import '../../core/errors/failure.dart';
 import '../../domain/entities/program_entity.dart';
 import '../../domain/entities/workout_session_entity.dart';
 import '../../domain/entities/exercise_log_entity.dart';
+import '../../domain/entities/exercise_library_entity.dart';
 import '../../domain/repositories/i_workout_repository.dart';
 import '../datasources/remote/firebase_workout_datasource.dart';
 import '../models/program_model.dart';
 import '../models/workout_session_model.dart';
+import '../models/exercise_library_model.dart';
 
 /// Workout repository implementation
 class WorkoutRepositoryImpl implements IWorkoutRepository {
@@ -14,6 +16,86 @@ class WorkoutRepositoryImpl implements IWorkoutRepository {
 
   WorkoutRepositoryImpl({required FirebaseWorkoutDataSource dataSource})
       : _dataSource = dataSource;
+
+  // ========== Exercise Library Operations ==========
+
+  @override
+  Future<List<ExerciseLibraryEntity>> getExerciseLibrary() async {
+    try {
+      final exercises = await _dataSource.getExerciseLibrary();
+      return exercises.map((e) => e.toEntity()).toList();
+    } on ServerException catch (e) {
+      throw ServerFailure(message: e.message, code: e.code);
+    } catch (e) {
+      throw ServerFailure(message: 'Failed to get exercise library: $e');
+    }
+  }
+
+  @override
+  Future<ExerciseLibraryEntity?> getExerciseLibraryById(
+    String exerciseId,
+  ) async {
+    try {
+      final exercise = await _dataSource.getExerciseLibraryById(exerciseId);
+      return exercise?.toEntity();
+    } on ServerException catch (e) {
+      throw ServerFailure(message: e.message, code: e.code);
+    } catch (e) {
+      throw ServerFailure(message: 'Failed to get library exercise: $e');
+    }
+  }
+
+  @override
+  Future<ExerciseLibraryEntity> createLibraryExercise(
+    ExerciseLibraryEntity exercise,
+  ) async {
+    try {
+      final model = ExerciseLibraryModel.fromEntity(exercise);
+      final created = await _dataSource.createLibraryExercise(model);
+      return created.toEntity();
+    } on ServerException catch (e) {
+      throw ServerFailure(message: e.message, code: e.code);
+    } catch (e) {
+      throw ServerFailure(message: 'Failed to create library exercise: $e');
+    }
+  }
+
+  @override
+  Future<ExerciseLibraryEntity> updateLibraryExercise(
+    ExerciseLibraryEntity exercise,
+  ) async {
+    try {
+      final model = ExerciseLibraryModel.fromEntity(exercise);
+      final updated = await _dataSource.updateLibraryExercise(model);
+      return updated.toEntity();
+    } on ServerException catch (e) {
+      throw ServerFailure(message: e.message, code: e.code);
+    } catch (e) {
+      throw ServerFailure(message: 'Failed to update library exercise: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteLibraryExercise(String exerciseId) async {
+    try {
+      await _dataSource.deleteLibraryExercise(exerciseId);
+    } on ServerException catch (e) {
+      throw ServerFailure(message: e.message, code: e.code);
+    } catch (e) {
+      throw ServerFailure(message: 'Failed to delete library exercise: $e');
+    }
+  }
+
+  @override
+  Stream<List<ExerciseLibraryEntity>> watchExerciseLibrary() {
+    try {
+      return _dataSource.watchExerciseLibrary().map(
+            (exercises) => exercises.map((e) => e.toEntity()).toList(),
+          );
+    } catch (e) {
+      throw ServerFailure(message: 'Failed to watch exercise library: $e');
+    }
+  }
 
   // ========== Program Operations ==========
 
