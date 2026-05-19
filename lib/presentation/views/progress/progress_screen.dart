@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_sizes.dart';
-import '../../../core/router/app_router.dart';
 import '../../viewmodels/progress_viewmodel.dart';
 
 class ProgressScreen extends ConsumerWidget {
@@ -174,8 +173,9 @@ class ProgressScreen extends ConsumerWidget {
       width: double.infinity,
       child: ElevatedButton.icon(
         onPressed: () {
+          final exerciseName = state.selectedExercise!;
           context.push(
-            '${AppRoutes.exerciseProgress}/${state.selectedExercise}?name=${state.selectedExercise}',
+            '/progress/${Uri.encodeComponent(exerciseName)}?name=${Uri.encodeComponent(exerciseName)}',
           );
         },
         icon: const Icon(Icons.bar_chart),
