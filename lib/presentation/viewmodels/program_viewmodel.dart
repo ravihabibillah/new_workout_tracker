@@ -13,6 +13,7 @@ import '../../data/datasources/local/exercise_library_cache.dart';
 import '../../data/datasources/local/program_cache.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'auth_viewmodel.dart';
 
 part 'program_viewmodel.g.dart';
 
@@ -76,9 +77,10 @@ class ProgramState {
 class ProgramViewModel extends _$ProgramViewModel {
   @override
   ProgramState build() {
-    // Defer the async load until after `build()` returns so that `state`
-    // is initialized before `loadPrograms()` tries to read/write it.
-    Future.microtask(loadPrograms);
+    final authState = ref.watch(authViewModelProvider);
+    if (authState.hasValue && authState.value != null) {
+      Future.microtask(loadPrograms);
+    }
     return const ProgramState(isLoading: true);
   }
 
