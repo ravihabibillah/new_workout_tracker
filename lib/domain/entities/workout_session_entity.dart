@@ -4,7 +4,7 @@ import 'exercise_log_entity.dart';
 class WorkoutSessionEntity {
   final String id;
   final String userId;
-  final String programId;
+  final String? programId;
   final String programName;
   final DateTime startTime;
   final DateTime? endTime;
@@ -12,24 +12,26 @@ class WorkoutSessionEntity {
   final bool isCompleted;
   final bool useRestTimer;
   final int restTimerDuration;
+  final bool isQuickWorkout;
 
   const WorkoutSessionEntity({
     required this.id,
     required this.userId,
-    required this.programId,
-    required this.programName,
+    this.programId,
+    this.programName = 'Quick Workout',
     required this.startTime,
     this.endTime,
     required this.exerciseLogs,
     this.isCompleted = false,
     this.useRestTimer = false,
     this.restTimerDuration = 90,
+    this.isQuickWorkout = false,
   });
 
   WorkoutSessionEntity copyWith({
     String? id,
     String? userId,
-    String? programId,
+    Object? programId = _sentinel,
     String? programName,
     DateTime? startTime,
     DateTime? endTime,
@@ -37,11 +39,14 @@ class WorkoutSessionEntity {
     bool? isCompleted,
     bool? useRestTimer,
     int? restTimerDuration,
+    bool? isQuickWorkout,
   }) {
     return WorkoutSessionEntity(
       id: id ?? this.id,
       userId: userId ?? this.userId,
-      programId: programId ?? this.programId,
+      programId: identical(programId, _sentinel)
+          ? this.programId
+          : programId as String?,
       programName: programName ?? this.programName,
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
@@ -49,6 +54,7 @@ class WorkoutSessionEntity {
       isCompleted: isCompleted ?? this.isCompleted,
       useRestTimer: useRestTimer ?? this.useRestTimer,
       restTimerDuration: restTimerDuration ?? this.restTimerDuration,
+      isQuickWorkout: isQuickWorkout ?? this.isQuickWorkout,
     );
   }
 
@@ -90,3 +96,5 @@ class WorkoutSessionEntity {
     return 'WorkoutSessionEntity(id: $id, program: $programName, exercises: ${exerciseLogs.length})';
   }
 }
+
+const _sentinel = Object();
