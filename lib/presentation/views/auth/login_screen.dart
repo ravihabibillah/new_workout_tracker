@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_sizes.dart';
@@ -51,9 +52,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
               const Spacer(),
-              ElevatedButton.icon(
+              ElevatedButton(
                 onPressed: _isLoading ? null : _signInWithGoogle,
-                icon: _isLoading
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppSizes.spacing16,
+                  ),
+                ),
+                child: _isLoading
                     ? const SizedBox(
                         width: 20,
                         height: 20,
@@ -64,17 +70,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                       )
-                    : const Icon(Icons.login),
-                label: Text(
-                  _isLoading
-                      ? 'Signing in...'
-                      : AppStrings.signInWithGoogle,
-                ),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppSizes.spacing16,
-                  ),
-                ),
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const FaIcon(
+                            FontAwesomeIcons.google,
+                            size: 20,
+                          ),
+                          const SizedBox(width: AppSizes.spacing12),
+                          Text(AppStrings.signInWithGoogle),
+                        ],
+                      ),
               ),
               const SizedBox(height: AppSizes.spacing48),
             ],
@@ -88,8 +94,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
     try {
       await ref.read(authViewModelProvider.notifier).signInWithGoogle();
-      // Don't reset _isLoading on success: GoRouter will redirect to home,
-      // and resetting state on a disposed widget would be a no-op anyway.
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
