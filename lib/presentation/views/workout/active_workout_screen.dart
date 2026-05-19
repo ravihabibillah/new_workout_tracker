@@ -5,14 +5,17 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../core/extensions/context_extensions.dart';
+import '../../../domain/entities/exercise_entity.dart';
 import '../../../domain/entities/exercise_log_entity.dart';
+import '../../../domain/entities/workout_session_entity.dart';
 import '../../viewmodels/workout_viewmodel.dart';
 import '../../viewmodels/program_viewmodel.dart';
+import '../exercise/exercise_picker_dialog.dart';
 
 class ActiveWorkoutScreen extends ConsumerStatefulWidget {
-  final String programId;
+  final String? programId;
 
-  const ActiveWorkoutScreen({super.key, required this.programId});
+  const ActiveWorkoutScreen({super.key, this.programId});
 
   @override
   ConsumerState<ActiveWorkoutScreen> createState() => _ActiveWorkoutScreenState();
@@ -35,7 +38,15 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
     final workoutState = ref.read(workoutViewModelProvider);
     if (workoutState.activeSession == null) {
       try {
-        final program = await ref.read(programByIdProvider(widget.programId).future);
+        if (widget.programId == null) {
+          await ref
+              .read(workoutViewModelProvider.notifier)
+              .startQuickWorkout();
+          if (mounted) setState(() => _isInitialized = true);
+          return;
+        }
+
+        final program = await ref.read(programByIdProvider(widget.programId!).future);
         if (program != null && mounted) {
           await ref.read(workoutViewModelProvider.notifier).startWorkout(
                 program.id,
@@ -296,19 +307,65 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
         ],
       ),
       child: SafeArea(
-        child: ElevatedButton.icon(
-          onPressed: session.completedSets > 0 ? _finishWorkout : null,
-          icon: const Icon(Icons.check),
-          label: const Text(AppStrings.finishWorkout),
-          style: ElevatedButton.styleFrom(
-            minimumSize: const Size(double.infinity, 56),
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            OutlinedButton.icon(
+              onPressed: _addExerciseToWorkout,
+              icon: const Icon(Icons.add),
+              label: const Text('Add Exercise'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 48),
+              ),
+            ),
+            const SizedBox(height: AppSizes.spacing8),
+            ElevatedButton.icon(
+              onPressed: session.completedSets > 0 ? _finishWorkout : null,
+              icon: const Icon(Icons.check),
+              label: const Text(AppStrings.finishWorkout),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 56),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
+  Future<void> _addExerciseToWorkout() async {
+    final session = ref.read(workoutViewModelProvider).activeSession;
+    if (session == null) return;
+
+    final existingExercises = session.exerciseLogs
+        .map((log) => ExerciseEntity(
+              id: log.exerciseId,
+              name: log.exerciseName,
+              muscleGroup: log.muscleGroup,
+              order: 0,
+            ))
+        .toList();
+
+    final picked = await showExercisePickerDialog(
+      context,
+      existingExercises: existingExercises,
+    );
+
+    if (picked != null && picked.isNotEmpty && mounted) {
+      for (final exercise in picked) {
+        await ref.read(workoutViewModelProvider.notifier).addExerciseLog(
+              exercise.id,
+              exercise.name,
+              exercise.muscleGroup,
+            );
+      }
+    }
+  }
+
   Future<void> _finishWorkout() async {
+    final session = ref.read(workoutViewModelProvider).activeSession;
+    if (session == null) return;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -331,8 +388,13 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
       try {
         await ref.read(workoutViewModelProvider.notifier).finishWorkout();
         if (mounted) {
-          context.pop();
-          context.showSnackBar('Workout completed! Great job! 💪');
+          if (session.isQuickWorkout && session.exerciseLogs.isNotEmpty) {
+            await _showSaveAsProgramDialog(session);
+          }
+          if (mounted) {
+            context.pop();
+            context.showSnackBar('Workout completed! Great job!');
+          }
         }
       } catch (e) {
         if (mounted) {
@@ -340,6 +402,62 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
         }
       }
     }
+  }
+
+  Future<void> _showSaveAsProgramDialog(WorkoutSessionEntity session) async {
+    final nameController = TextEditingController();
+    final shouldSave = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Save as Program?'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Would you like to save this workout as a reusable program?'),
+            const SizedBox(height: AppSizes.spacing16),
+            TextFormField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Program name',
+                hintText: 'e.g., My Custom Workout',
+              ),
+              textCapitalization: TextCapitalization.words,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('No thanks'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldSave == true && nameController.text.trim().isNotEmpty && mounted) {
+      final exercises = session.exerciseLogs
+          .map((log) => ExerciseEntity(
+                id: log.exerciseId,
+                name: log.exerciseName,
+                muscleGroup: log.muscleGroup,
+                order: 0,
+              ))
+          .toList();
+
+      await ref.read(programViewModelProvider.notifier).createProgram(
+            name: nameController.text.trim(),
+            exercises: exercises,
+          );
+
+      if (mounted) {
+        context.showSnackBar('Program saved!');
+      }
+    }
+    nameController.dispose();
   }
 
   Future<bool?> _showCancelConfirmation() async {

@@ -91,6 +91,26 @@ class WorkoutViewModel extends _$WorkoutViewModel {
     }
   }
 
+  Future<void> startQuickWorkout({
+    String programName = 'Quick Workout',
+    bool useRestTimer = false,
+    int restTimerDuration = 90,
+  }) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final repository = ref.read(workoutRepositoryProvider);
+      final session = await repository.startQuickWorkoutSession(
+        programName: programName,
+        useRestTimer: useRestTimer,
+        restTimerDuration: restTimerDuration,
+      );
+      state = state.copyWith(activeSession: session, isLoading: false);
+    } on Failure catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.message);
+      rethrow;
+    }
+  }
+
   Future<void> addExerciseLog(String exerciseId, String exerciseName, String muscleGroup) async {
     final session = state.activeSession;
     if (session == null) return;

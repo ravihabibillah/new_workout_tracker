@@ -194,6 +194,36 @@ class FirebaseWorkoutDataSource {
     }
   }
 
+  Future<WorkoutSessionModel> startQuickWorkoutSession({
+    String programName = 'Quick Workout',
+    bool useRestTimer = false,
+    int restTimerDuration = 90,
+  }) async {
+    try {
+      final session = WorkoutSessionModel(
+        id: '',
+        userId: _userId,
+        programId: null,
+        programName: programName,
+        startTime: DateTime.now(),
+        exerciseLogs: [],
+        isCompleted: false,
+        useRestTimer: useRestTimer,
+        restTimerDuration: restTimerDuration,
+        isQuickWorkout: true,
+      );
+      final docRef = await _firestore
+          .collection('users')
+          .doc(_userId)
+          .collection('sessions')
+          .add(session.toJson());
+      final doc = await docRef.get();
+      return WorkoutSessionModel.fromJson({...doc.data()!, 'id': doc.id});
+    } catch (e) {
+      throw ServerException(message: 'Failed to start quick session: $e');
+    }
+  }
+
   Future<WorkoutSessionModel> updateWorkoutSession(
     WorkoutSessionModel session,
   ) async {

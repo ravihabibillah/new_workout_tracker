@@ -62,6 +62,13 @@ abstract class IWorkoutRepository {
     int restTimerDuration = 90,
   });
 
+  /// Start a quick workout session (without a program)
+  Future<WorkoutSessionEntity> startQuickWorkoutSession({
+    String programName = 'Quick Workout',
+    bool useRestTimer = false,
+    int restTimerDuration = 90,
+  });
+
   /// Update workout session
   Future<WorkoutSessionEntity> updateWorkoutSession(
     WorkoutSessionEntity session,

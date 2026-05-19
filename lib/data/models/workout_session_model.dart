@@ -6,14 +6,15 @@ class WorkoutSessionModel extends WorkoutSessionEntity {
   const WorkoutSessionModel({
     required super.id,
     required super.userId,
-    required super.programId,
-    required super.programName,
+    super.programId,
+    super.programName,
     required super.startTime,
     super.endTime,
     required super.exerciseLogs,
     super.isCompleted,
     super.useRestTimer,
     super.restTimerDuration,
+    super.isQuickWorkout,
   });
 
   factory WorkoutSessionModel.fromEntity(WorkoutSessionEntity entity) {
@@ -30,6 +31,7 @@ class WorkoutSessionModel extends WorkoutSessionEntity {
       isCompleted: entity.isCompleted,
       useRestTimer: entity.useRestTimer,
       restTimerDuration: entity.restTimerDuration,
+      isQuickWorkout: entity.isQuickWorkout,
     );
   }
 
@@ -37,8 +39,8 @@ class WorkoutSessionModel extends WorkoutSessionEntity {
     return WorkoutSessionModel(
       id: json['id'] as String,
       userId: json['userId'] as String,
-      programId: json['programId'] as String,
-      programName: json['programName'] as String,
+      programId: json['programId'] as String?,
+      programName: json['programName'] as String? ?? 'Quick Workout',
       startTime: DateTime.parse(json['startTime'] as String),
       endTime: json['endTime'] != null
           ? DateTime.parse(json['endTime'] as String)
@@ -49,6 +51,7 @@ class WorkoutSessionModel extends WorkoutSessionEntity {
       isCompleted: json['isCompleted'] as bool? ?? false,
       useRestTimer: json['useRestTimer'] as bool? ?? false,
       restTimerDuration: json['restTimerDuration'] as int? ?? 90,
+      isQuickWorkout: json['isQuickWorkout'] as bool? ?? false,
     );
   }
 
@@ -66,6 +69,7 @@ class WorkoutSessionModel extends WorkoutSessionEntity {
       'isCompleted': isCompleted,
       'useRestTimer': useRestTimer,
       'restTimerDuration': restTimerDuration,
+      'isQuickWorkout': isQuickWorkout,
     };
   }
 
@@ -83,6 +87,7 @@ class WorkoutSessionModel extends WorkoutSessionEntity {
       isCompleted: isCompleted,
       useRestTimer: useRestTimer,
       restTimerDuration: restTimerDuration,
+      isQuickWorkout: isQuickWorkout,
     );
   }
 }

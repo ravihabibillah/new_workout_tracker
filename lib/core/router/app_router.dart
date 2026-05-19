@@ -27,6 +27,7 @@ class AppRoutes {
   static const String editProgram = '/programs/:id/edit';
   static const String exerciseLibrary = '/exercises';
   static const String workout = '/workout/:programId';
+  static const String quickWorkout = '/workout/quick';
   static const String workoutHistory = '/workout-history';
   static const String progress = '/progress';
   static const String exerciseProgress = '/progress/:exerciseId';
@@ -135,6 +136,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.exerciseLibrary,
         builder: (context, state) => const ExerciseLibraryScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.quickWorkout,
+        builder: (context, state) => const ActiveWorkoutScreen(programId: null),
       ),
       GoRoute(
         path: AppRoutes.workout,

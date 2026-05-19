@@ -208,6 +208,26 @@ class WorkoutRepositoryImpl implements IWorkoutRepository {
   }
 
   @override
+  Future<WorkoutSessionEntity> startQuickWorkoutSession({
+    String programName = 'Quick Workout',
+    bool useRestTimer = false,
+    int restTimerDuration = 90,
+  }) async {
+    try {
+      final session = await _dataSource.startQuickWorkoutSession(
+        programName: programName,
+        useRestTimer: useRestTimer,
+        restTimerDuration: restTimerDuration,
+      );
+      return session.toEntity();
+    } on ServerException catch (e) {
+      throw ServerFailure(message: e.message, code: e.code);
+    } catch (e) {
+      throw ServerFailure(message: 'Failed to start quick session: $e');
+    }
+  }
+
+  @override
   Future<WorkoutSessionEntity> updateWorkoutSession(
     WorkoutSessionEntity session,
   ) async {
