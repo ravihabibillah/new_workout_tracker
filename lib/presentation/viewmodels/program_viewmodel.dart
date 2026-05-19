@@ -10,6 +10,7 @@ import '../../domain/usecases/delete_program_usecase.dart';
 import '../../data/repositories/workout_repository_impl.dart';
 import '../../data/datasources/remote/firebase_workout_datasource.dart';
 import '../../data/datasources/local/exercise_library_cache.dart';
+import '../../data/datasources/local/program_cache.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -24,6 +25,14 @@ ExerciseLibraryCache exerciseLibraryCache(ExerciseLibraryCacheRef ref) {
   );
 }
 
+/// Provider for the local Hive program cache. Overridden in `main()`.
+@Riverpod(keepAlive: true)
+ProgramCache programCache(ProgramCacheRef ref) {
+  throw UnimplementedError(
+    'programCacheProvider must be overridden in main()',
+  );
+}
+
 /// Workout repository provider
 @riverpod
 IWorkoutRepository workoutRepository(WorkoutRepositoryRef ref) {
@@ -32,6 +41,7 @@ IWorkoutRepository workoutRepository(WorkoutRepositoryRef ref) {
       firestore: FirebaseFirestore.instance,
       firebaseAuth: FirebaseAuth.instance,
       libraryCache: ref.watch(exerciseLibraryCacheProvider),
+      programCache: ref.watch(programCacheProvider),
     ),
   );
 }

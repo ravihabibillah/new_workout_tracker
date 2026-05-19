@@ -7,6 +7,7 @@ import '../../data/datasources/remote/firebase_auth_datasource.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'program_viewmodel.dart';
 
 part 'auth_viewmodel.g.dart';
 
@@ -48,6 +49,8 @@ class AuthViewModel extends _$AuthViewModel {
     try {
       final repository = ref.read(authRepositoryProvider);
       await repository.signOut();
+      // Clear per-user cached data so the next user doesn't see stale programs.
+      await ref.read(programCacheProvider).clear();
     } on AuthFailure catch (e) {
       throw e.message;
     } catch (e) {

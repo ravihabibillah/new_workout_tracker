@@ -7,19 +7,23 @@ import '../../models/exercise_log_model.dart';
 import '../../models/exercise_library_model.dart';
 import '../../seed/default_exercises.dart';
 import '../local/exercise_library_cache.dart';
+import '../local/program_cache.dart';
 
 class FirebaseWorkoutDataSource {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _firebaseAuth;
   final ExerciseLibraryCache? _libraryCache;
+  final ProgramCache? _programCache;
 
   FirebaseWorkoutDataSource({
     required FirebaseFirestore firestore,
     required FirebaseAuth firebaseAuth,
     ExerciseLibraryCache? libraryCache,
+    ProgramCache? programCache,
   })  : _firestore = firestore,
         _firebaseAuth = firebaseAuth,
-        _libraryCache = libraryCache;
+        _libraryCache = libraryCache,
+        _programCache = programCache;
 
   String get _userId {
     final uid = _firebaseAuth.currentUser?.uid;
@@ -28,33 +32,73 @@ class FirebaseWorkoutDataSource {
   }
 
   // ========== Program Operations ==========
+  // Programs are per-user. Cache strategy:
+  // - Return cache immediately if it belongs to the current user and is not empty
+  // - Background sync from Firestore to pick up changes from other devices
+  // - Fall back to cache when offline / Firestore fails
+
+  CollectionReference<Map<String, dynamic>> get _programsRef => _firestore
+      .collection('users')
+      .doc(_userId)
+      .collection('programs');
 
   Future<List<ProgramModel>> getPrograms() async {
+    final cache = _programCache;
+    final userId = _userId;
+
+    if (cache != null &&
+        !cache.isStaleForUser(userId) &&
+        !cache.isEmpty) {
+      _syncProgramsToCache(cache, userId);
+      return cache.getAll();
+    }
+
     try {
-      final snapshot = await _firestore
-          .collection('users')
-          .doc(_userId)
-          .collection('programs')
-          .orderBy('createdAt', descending: true)
-          .get();
-      return snapshot.docs
-          .map((doc) => ProgramModel.fromJson({...doc.data(), 'id': doc.id}))
-          .toList();
+      final programs = await _fetchProgramsFromFirestore();
+      if (cache != null) {
+        await cache.replaceAll(userId, programs);
+      }
+      return programs;
     } catch (e) {
+      if (cache != null &&
+          !cache.isStaleForUser(userId) &&
+          !cache.isEmpty) {
+        return cache.getAll();
+      }
       throw ServerException(message: 'Failed to get programs: $e');
     }
   }
 
+  Future<List<ProgramModel>> _fetchProgramsFromFirestore() async {
+    final snapshot =
+        await _programsRef.orderBy('createdAt', descending: true).get();
+    return snapshot.docs
+        .map((doc) => ProgramModel.fromJson({...doc.data(), 'id': doc.id}))
+        .toList();
+  }
+
+  void _syncProgramsToCache(ProgramCache cache, String userId) {
+    _fetchProgramsFromFirestore().then((programs) {
+      cache.replaceAll(userId, programs);
+    }).catchError((_) {});
+  }
+
   Future<ProgramModel?> getProgramById(String programId) async {
+    final cache = _programCache;
+    final userId = _userId;
+
+    if (cache != null && !cache.isStaleForUser(userId)) {
+      final cached = cache.getById(programId);
+      if (cached != null) return cached;
+    }
+
     try {
-      final doc = await _firestore
-          .collection('users')
-          .doc(_userId)
-          .collection('programs')
-          .doc(programId)
-          .get();
+      final doc = await _programsRef.doc(programId).get();
       if (!doc.exists) return null;
-      return ProgramModel.fromJson({...doc.data()!, 'id': doc.id});
+      final program =
+          ProgramModel.fromJson({...doc.data()!, 'id': doc.id});
+      await cache?.upsert(program);
+      return program;
     } catch (e) {
       throw ServerException(message: 'Failed to get program: $e');
     }
@@ -62,13 +106,12 @@ class FirebaseWorkoutDataSource {
 
   Future<ProgramModel> createProgram(ProgramModel program) async {
     try {
-      final docRef = await _firestore
-          .collection('users')
-          .doc(_userId)
-          .collection('programs')
-          .add(program.toJson());
+      final docRef = await _programsRef.add(program.toJson());
       final doc = await docRef.get();
-      return ProgramModel.fromJson({...doc.data()!, 'id': doc.id});
+      final created =
+          ProgramModel.fromJson({...doc.data()!, 'id': doc.id});
+      await _programCache?.upsert(created);
+      return created;
     } catch (e) {
       throw ServerException(message: 'Failed to create program: $e');
     }
@@ -76,12 +119,8 @@ class FirebaseWorkoutDataSource {
 
   Future<ProgramModel> updateProgram(ProgramModel program) async {
     try {
-      await _firestore
-          .collection('users')
-          .doc(_userId)
-          .collection('programs')
-          .doc(program.id)
-          .update(program.toJson());
+      await _programsRef.doc(program.id).update(program.toJson());
+      await _programCache?.upsert(program);
       return program;
     } catch (e) {
       throw ServerException(message: 'Failed to update program: $e');
@@ -90,22 +129,15 @@ class FirebaseWorkoutDataSource {
 
   Future<void> deleteProgram(String programId) async {
     try {
-      await _firestore
-          .collection('users')
-          .doc(_userId)
-          .collection('programs')
-          .doc(programId)
-          .delete();
+      await _programsRef.doc(programId).delete();
+      await _programCache?.remove(programId);
     } catch (e) {
       throw ServerException(message: 'Failed to delete program: $e');
     }
   }
 
   Stream<List<ProgramModel>> watchPrograms() {
-    return _firestore
-        .collection('users')
-        .doc(_userId)
-        .collection('programs')
+    return _programsRef
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
