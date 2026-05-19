@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/extensions/context_extensions.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../viewmodels/program_viewmodel.dart';
 import '../../viewmodels/workout_viewmodel.dart';
@@ -322,9 +323,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              ref.read(authViewModelProvider.notifier).signOut();
+              await ref.read(authViewModelProvider.notifier).signOut();
+              if (context.mounted) {
+                context.showSnackBar('Logged out successfully');
+              }
             },
             child: const Text(
               'Logout',
