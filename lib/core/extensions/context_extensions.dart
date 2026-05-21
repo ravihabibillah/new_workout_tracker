@@ -1,4 +1,9 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
+import '../constants/app_colors.dart';
+import '../constants/app_sizes.dart';
 
 /// BuildContext extensions for easier access to common properties
 extension ContextExtensions on BuildContext {
@@ -32,13 +37,55 @@ extension ContextExtensions on BuildContext {
   /// Check if keyboard is visible
   bool get isKeyboardVisible => viewInsets.bottom > 0;
 
-  /// Show snackbar
+  /// Show snackbar with liquid glass style
   void showSnackBar(String message, {bool isError = false}) {
+    final accent = isError ? AppColors.error : AppColors.success;
+    final icon = isError
+        ? FontAwesomeIcons.circleExclamation
+        : FontAwesomeIcons.circleCheck;
+
     ScaffoldMessenger.of(this).showSnackBar(
       SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.red : Colors.green,
+        content: ClipRRect(
+          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.spacing16,
+                vertical: AppSizes.spacing12,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.surface.withValues(alpha: 0.85),
+                borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                border: Border.all(
+                  color: accent.withValues(alpha: 0.4),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FaIcon(icon, color: accent, size: 18),
+                  const SizedBox(width: AppSizes.spacing12),
+                  Expanded(
+                    child: Text(
+                      message,
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         behavior: SnackBarBehavior.floating,
+        padding: EdgeInsets.zero,
+        margin: const EdgeInsets.all(AppSizes.spacing16),
       ),
     );
   }
