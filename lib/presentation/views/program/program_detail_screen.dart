@@ -8,6 +8,7 @@ import '../../../core/constants/app_sizes.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../viewmodels/program_viewmodel.dart';
+import '../../widgets/liquid_glass.dart';
 import '../../widgets/shimmer_loading.dart';
 
 class ProgramDetailScreen extends ConsumerWidget {
@@ -22,14 +23,13 @@ class ProgramDetailScreen extends ConsumerWidget {
     return programAsync.when(
       data: (program) {
         if (program == null) {
-          return Scaffold(
+          return GlassScaffold(
             appBar: AppBar(title: const Text('Program Not Found')),
             body: const Center(child: Text('Program not found')),
           );
         }
 
-        return Scaffold(
-          backgroundColor: AppColors.background,
+        return GlassScaffold(
           appBar: AppBar(
             title: Text(program.name),
             actions: [
@@ -42,36 +42,55 @@ class ProgramDetailScreen extends ConsumerWidget {
                 },
               ),
               IconButton(
-                icon: const FaIcon(FontAwesomeIcons.trashCan),
+                icon: const FaIcon(FontAwesomeIcons.trashCan, color: AppColors.error),
                 onPressed: () => _showDeleteConfirmation(context, ref),
               ),
             ],
           ),
-          body: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppSizes.spacing16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildProgramInfo(context, program),
-                      const SizedBox(height: AppSizes.spacing24),
-                      _buildExerciseList(context, program),
-                    ],
+          body: Padding(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + kToolbarHeight,
+            ),
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSizes.spacing16,
+                      AppSizes.spacing16,
+                      AppSizes.spacing16,
+                      AppSizes.spacing32,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildProgramInfo(context, program),
+                        const SizedBox(height: AppSizes.spacing24),
+                        _buildExerciseList(context, program),
+                        const SizedBox(height: 80),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              _buildStartWorkoutButton(context, program),
-            ],
+              ],
+            ),
           ),
+          floatingActionButton: _buildStartButton(context, program),
+          floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         );
       },
-      loading: () => Scaffold(
+      loading: () => GlassScaffold(
         appBar: AppBar(title: const Text('Loading...')),
-        body: const ShimmerWorkoutScreen(),
+        body: Builder(
+          builder: (context) => Padding(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + kToolbarHeight,
+            ),
+            child: const ShimmerWorkoutScreen(),
+          ),
+        ),
       ),
-      error: (error, stack) => Scaffold(
+      error: (error, stack) => GlassScaffold(
         appBar: AppBar(title: const Text('Error')),
         body: Center(child: Text('Error: $error')),
       ),
@@ -79,62 +98,65 @@ class ProgramDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildProgramInfo(BuildContext context, program) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSizes.spacing16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: AppColors.primary,
-                  radius: 32,
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                ),
+                child: Center(
                   child: Text(
                     program.name[0].toUpperCase(),
                     style: const TextStyle(
-                      color: AppColors.background,
+                      color: AppColors.primary,
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                const SizedBox(width: AppSizes.spacing16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        program.name,
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: AppSizes.spacing4),
-                      Text(
-                        '${program.exercises.length} exercises',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            if (program.description != null) ...[
-              const SizedBox(height: AppSizes.spacing16),
-              Divider(color: AppColors.divider),
-              const SizedBox(height: AppSizes.spacing16),
-              Text(
-                program.description!,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
+              ),
+              const SizedBox(width: AppSizes.spacing16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      program.name,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
+                    const SizedBox(height: AppSizes.spacing4),
+                    Text(
+                      '${program.exercises.length} exercises',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                    ),
+                  ],
+                ),
               ),
             ],
+          ),
+          if (program.description != null) ...[
+            const SizedBox(height: AppSizes.spacing16),
+            const GlassDivider(),
+            const SizedBox(height: AppSizes.spacing16),
+            Text(
+              program.description!,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -156,40 +178,64 @@ class ProgramDetailScreen extends ConsumerWidget {
           ...program.exercises.asMap().entries.map((entry) {
             final index = entry.key;
             final exercise = entry.value;
-            return Card(
-              margin: const EdgeInsets.only(bottom: AppSizes.spacing12),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: AppColors.surfaceSecondary,
-                  child: Text(
-                    '${index + 1}',
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSizes.spacing12),
+              child: GlassCard(
+                padding: const EdgeInsets.all(AppSizes.spacing12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${index + 1}',
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                title: Text(
-                  exercise.name,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(width: AppSizes.spacing12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            exercise.name,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                          Text(
+                            exercise.muscleGroup,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: AppColors.primary,
+                                ),
+                          ),
+                        ],
                       ),
-                ),
-                subtitle: Text(
-                  exercise.muscleGroup,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSizes.spacing8,
+                        vertical: AppSizes.spacing4,
                       ),
-                ),
-                trailing: Chip(
-                  label: Text(
-                    exercise.muscleGroup,
-                    style: const TextStyle(fontSize: 11),
-                  ),
-                  backgroundColor: AppColors.surfaceSecondary,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSizes.spacing8,
-                  ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(AppSizes.radiusChip),
+                      ),
+                      child: Text(
+                        exercise.muscleGroup,
+                        style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -199,63 +245,66 @@ class ProgramDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSizes.spacing32),
-        child: Column(
-          children: [
-            FaIcon(
-              FontAwesomeIcons.dumbbell,
-              size: 64,
-              color: AppColors.textSecondary,
-            ),
-            const SizedBox(height: AppSizes.spacing16),
-            Text(
-              'No exercises yet',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-            ),
-            const SizedBox(height: AppSizes.spacing8),
-            Text(
-              'Edit this program to add exercises',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-            ),
-          ],
-        ),
+    return GlassCard(
+      padding: const EdgeInsets.all(AppSizes.spacing32),
+      child: Column(
+        children: [
+          FaIcon(FontAwesomeIcons.dumbbell, size: 48, color: AppColors.textSecondary),
+          const SizedBox(height: AppSizes.spacing16),
+          Text(
+            'No exercises yet',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+          ),
+          const SizedBox(height: AppSizes.spacing8),
+          Text(
+            'Edit this program to add exercises',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildStartWorkoutButton(BuildContext context, program) {
-    return Container(
-      padding: const EdgeInsets.all(AppSizes.spacing16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: ElevatedButton.icon(
-          onPressed: program.exercises.isEmpty
-              ? null
-              : () {
-                  context.push(
-                    AppRoutes.workout.replaceAll(':programId', programId),
-                  );
-                },
-          icon: const FaIcon(FontAwesomeIcons.play),
-          label: const Text('Start Workout'),
-          style: ElevatedButton.styleFrom(
-            minimumSize: const Size(double.infinity, 56),
-          ),
+  Widget _buildStartButton(BuildContext context, program) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.spacing16),
+      child: LiquidGlass(
+        tintColor: program.exercises.isEmpty ? null : AppColors.primary,
+        tintOpacity: program.exercises.isEmpty ? 0.04 : 0.25,
+        onTap: program.exercises.isEmpty
+            ? null
+            : () {
+                context.push(
+                  AppRoutes.workout.replaceAll(':programId', programId),
+                );
+              },
+        padding: const EdgeInsets.symmetric(vertical: AppSizes.spacing16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            FaIcon(
+              FontAwesomeIcons.play,
+              color: program.exercises.isEmpty
+                  ? AppColors.textSecondary
+                  : AppColors.primary,
+              size: 16,
+            ),
+            const SizedBox(width: AppSizes.spacing12),
+            Text(
+              'Start Workout',
+              style: TextStyle(
+                color: program.exercises.isEmpty
+                    ? AppColors.textSecondary
+                    : AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -264,16 +313,20 @@ class ProgramDetailScreen extends ConsumerWidget {
   void _showDeleteConfirmation(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text(AppStrings.deleteProgram),
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      builder: (dialogContext) => GlassDialog(
+        title: AppStrings.deleteProgram,
         content: const Text('Are you sure you want to delete this program?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(AppStrings.cancel),
+          GlassDialogButton(
+            label: AppStrings.cancel,
+            onTap: () => Navigator.pop(dialogContext),
           ),
-          TextButton(
-            onPressed: () async {
+          GlassDialogButton(
+            label: AppStrings.delete,
+            color: AppColors.error,
+            isPrimary: true,
+            onTap: () async {
               Navigator.pop(dialogContext);
               try {
                 await ref
@@ -289,10 +342,6 @@ class ProgramDetailScreen extends ConsumerWidget {
                 }
               }
             },
-            child: const Text(
-              AppStrings.delete,
-              style: TextStyle(color: AppColors.error),
-            ),
           ),
         ],
       ),
