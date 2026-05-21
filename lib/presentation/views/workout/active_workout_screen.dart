@@ -9,6 +9,7 @@ import '../../../core/extensions/context_extensions.dart';
 import '../../../domain/entities/exercise_entity.dart';
 import '../../../domain/entities/exercise_log_entity.dart';
 import '../../../domain/entities/workout_session_entity.dart';
+import '../../widgets/liquid_glass.dart';
 import '../../widgets/shimmer_loading.dart';
 import '../../viewmodels/workout_viewmodel.dart';
 import '../../viewmodels/program_viewmodel.dart';
@@ -25,6 +26,7 @@ class ActiveWorkoutScreen extends ConsumerStatefulWidget {
 
 class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
   bool _isInitialized = false;
+  bool _isAddingExercise = false;
 
   @override
   void initState() {
@@ -82,21 +84,22 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
     final state = ref.watch(workoutViewModelProvider);
 
     if (!_isInitialized || state.activeSession == null) {
-      return Scaffold(
-        backgroundColor: AppColors.background,
+      return GlassScaffold(
         appBar: AppBar(title: const Text('Loading...')),
-        body: const ShimmerWorkoutScreen(),
+        body: Padding(
+          padding: EdgeInsets.only(
+            top: MediaQuery.of(context).padding.top + kToolbarHeight,
+          ),
+          child: const ShimmerWorkoutScreen(),
+        ),
       );
     }
 
     final session = state.activeSession!;
 
-    return WillPopScope(
-      onWillPop: () async {
-        return true;
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.background,
+    return PopScope(
+      canPop: true,
+      child: GlassScaffold(
         appBar: AppBar(
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,27 +127,38 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                 final shouldCancel = await _showCancelConfirmation();
                 if (shouldCancel == true && mounted) {
                   await ref.read(workoutViewModelProvider.notifier).cancelWorkout();
-                  if (mounted) context.pop();
+                  if (mounted && context.mounted) context.pop();
                 }
               },
             ),
           ],
         ),
-        body: Column(
-          children: [
-            if (state.isRestTimerActive) _buildRestTimer(state),
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(AppSizes.spacing16),
-                itemCount: session.exerciseLogs.length,
-                itemBuilder: (context, index) {
-                  final exerciseLog = session.exerciseLogs[index];
-                  return _buildExerciseCard(exerciseLog);
-                },
+        body: Padding(
+          padding: EdgeInsets.only(
+            top: MediaQuery.of(context).padding.top + kToolbarHeight,
+          ),
+          child: Column(
+            children: [
+              if (state.isRestTimerActive) _buildRestTimer(state),
+              Expanded(
+                child: _isAddingExercise
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(AppSizes.spacing16),
+                        itemCount: session.exerciseLogs.length,
+                        itemBuilder: (context, index) {
+                          final exerciseLog = session.exerciseLogs[index];
+                          return _buildExerciseCard(exerciseLog, key: ValueKey(exerciseLog.exerciseId));
+                        },
+                      ),
               ),
-            ),
-            _buildBottomBar(session),
-          ],
+              _buildBottomBar(session),
+            ],
+          ),
         ),
       ),
     );
@@ -159,7 +173,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSizes.spacing16),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
+        color: AppColors.primary.withValues(alpha: 0.1),
         border: Border(
           bottom: BorderSide(color: AppColors.primary, width: 2),
         ),
@@ -206,49 +220,47 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
     );
   }
 
-  Widget _buildExerciseCard(ExerciseLogEntity exerciseLog) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: AppSizes.spacing16),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSizes.spacing16),
+  Widget _buildExerciseCard(ExerciseLogEntity exerciseLog, {Key? key}) {
+    return Padding(
+      key: key,
+      padding: const EdgeInsets.only(bottom: AppSizes.spacing16),
+      child: GlassCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        exerciseLog.exerciseName,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: AppSizes.spacing4),
-                      Chip(
-                        label: Text(
-                          exerciseLog.muscleGroup,
-                          style: const TextStyle(fontSize: 11),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          exerciseLog.exerciseName,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
-                        backgroundColor: AppColors.surfaceSecondary,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSizes.spacing8,
-                        ),
-                      ),
-                    ],
+                        const SizedBox(height: AppSizes.spacing4),
+                        GlassChip(label: exerciseLog.muscleGroup),
+                      ],
+                    ),
                   ),
-                ),
-                Text(
-                  '${exerciseLog.completedSetsCount}/${exerciseLog.sets.length}',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-              ],
-            ),
+                  Text(
+                    '${exerciseLog.completedSetsCount}/${exerciseLog.sets.length}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(width: AppSizes.spacing8),
+                  IconButton(
+                    icon: const FaIcon(FontAwesomeIcons.trashCan, size: 16),
+                    color: AppColors.error,
+                    tooltip: 'Remove exercise',
+                    onPressed: () => _confirmRemoveExercise(exerciseLog),
+                  ),
+                ],
+              ),
             const SizedBox(height: AppSizes.spacing16),
             if (exerciseLog.sets.isEmpty)
               _buildEmptySetState(exerciseLog)
@@ -256,27 +268,48 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
               ...exerciseLog.sets.asMap().entries.map((entry) {
                 final index = entry.key;
                 final set = entry.value;
-                return _SetRow(
-                  key: ValueKey(
-                    '${exerciseLog.exerciseId}-$index-${set.isCompleted}',
+                return Dismissible(
+                  key: ValueKey('${exerciseLog.exerciseId}-set-$index'),
+                  direction: DismissDirection.endToStart,
+                  onDismissed: (_) {
+                    ref.read(workoutViewModelProvider.notifier).deleteSet(
+                          exerciseLog.exerciseId,
+                          index,
+                        );
+                  },
+                  background: Container(
+                    margin: const EdgeInsets.only(bottom: AppSizes.spacing8),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                      border: Border.all(color: AppColors.error.withValues(alpha: 0.4)),
+                    ),
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: AppSizes.spacing16),
+                    child: const FaIcon(
+                      FontAwesomeIcons.trashCan,
+                      color: AppColors.error,
+                      size: 18,
+                    ),
                   ),
-                  exerciseLog: exerciseLog,
-                  index: index,
-                  set: set,
+                  child: _SetRow(
+                    key: ValueKey('${exerciseLog.exerciseId}-setrow-$index'),
+                    exerciseLog: exerciseLog,
+                    index: index,
+                    set: set,
+                  ),
                 );
               }),
             const SizedBox(height: AppSizes.spacing12),
-            SizedBox(
+            GlassButton(
+              label: AppStrings.addSet,
+              icon: FontAwesomeIcons.plus,
               width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  ref.read(workoutViewModelProvider.notifier).addSet(
-                        exerciseLog.exerciseId,
-                      );
-                },
-                icon: const FaIcon(FontAwesomeIcons.plus),
-                label: const Text(AppStrings.addSet),
-              ),
+              onTap: () {
+                ref.read(workoutViewModelProvider.notifier).addSet(
+                      exerciseLog.exerciseId,
+                    );
+              },
             ),
           ],
         ),
@@ -288,7 +321,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
     return Container(
       padding: const EdgeInsets.all(AppSizes.spacing24),
       decoration: BoxDecoration(
-        color: AppColors.surfaceSecondary,
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
       ),
       child: Center(
@@ -303,38 +336,37 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
   }
 
   Widget _buildBottomBar(session) {
-    return Container(
-      padding: const EdgeInsets.all(AppSizes.spacing16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(
+          AppSizes.spacing16,
+          AppSizes.spacing12,
+          AppSizes.spacing16,
+          AppSizes.spacing8,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          border: Border(
+            top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
           ),
-        ],
-      ),
-      child: SafeArea(
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            OutlinedButton.icon(
-              onPressed: _addExerciseToWorkout,
-              icon: const FaIcon(FontAwesomeIcons.plus),
-              label: const Text('Add Exercise'),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 48),
-              ),
+            GlassButton(
+              label: 'Add Exercise',
+              icon: FontAwesomeIcons.plus,
+              width: double.infinity,
+              onTap: _addExerciseToWorkout,
             ),
             const SizedBox(height: AppSizes.spacing8),
-            ElevatedButton.icon(
-              onPressed: session.completedSets > 0 ? _finishWorkout : null,
-              icon: const FaIcon(FontAwesomeIcons.check),
-              label: const Text(AppStrings.finishWorkout),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 56),
-              ),
+            GlassButton(
+              label: AppStrings.finishWorkout,
+              icon: FontAwesomeIcons.check,
+              width: double.infinity,
+              filled: true,
+              onTap: session.completedSets > 0 ? _finishWorkout : null,
             ),
           ],
         ),
@@ -361,13 +393,48 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
     );
 
     if (picked != null && picked.isNotEmpty && mounted) {
-      for (final exercise in picked) {
-        await ref.read(workoutViewModelProvider.notifier).addExerciseLog(
-              exercise.id,
-              exercise.name,
-              exercise.muscleGroup,
-            );
+      setState(() => _isAddingExercise = true);
+      try {
+        for (final exercise in picked) {
+          await ref.read(workoutViewModelProvider.notifier).addExerciseLog(
+                exercise.id,
+                exercise.name,
+                exercise.muscleGroup,
+              );
+        }
+      } finally {
+        if (mounted) setState(() => _isAddingExercise = false);
       }
+    }
+  }
+
+  Future<void> _confirmRemoveExercise(ExerciseLogEntity exerciseLog) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      builder: (context) => GlassDialog(
+        title: 'Remove Exercise',
+        content: Text(
+          'Remove "${exerciseLog.exerciseName}" from this workout? All sets logged for this exercise will be lost.',
+        ),
+        actions: [
+          GlassDialogButton(
+            label: AppStrings.cancel,
+            onTap: () => Navigator.pop(context, false),
+          ),
+          GlassDialogButton(
+            label: AppStrings.delete,
+            color: AppColors.error,
+            onTap: () => Navigator.pop(context, true),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await ref
+          .read(workoutViewModelProvider.notifier)
+          .removeExerciseLog(exerciseLog.exerciseId);
     }
   }
 
@@ -375,19 +442,29 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
     final session = ref.read(workoutViewModelProvider).activeSession;
     if (session == null) return;
 
+    if (session.completedSets == 0) {
+      context.showSnackBar(
+        'Complete at least one set before finishing the workout.',
+        isError: true,
+      );
+      return;
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Finish Workout'),
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      builder: (context) => GlassDialog(
+        title: 'Finish Workout',
         content: const Text('Are you sure you want to finish this workout?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text(AppStrings.cancel),
+          GlassDialogButton(
+            label: AppStrings.cancel,
+            onTap: () => Navigator.pop(context, false),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text(AppStrings.confirm),
+          GlassDialogButton(
+            label: AppStrings.confirm,
+            isPrimary: true,
+            onTap: () => Navigator.pop(context, true),
           ),
         ],
       ),
@@ -456,22 +533,22 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
   Future<bool?> _showCancelConfirmation() async {
     return showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(AppStrings.cancelWorkout),
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      builder: (context) => GlassDialog(
+        title: AppStrings.cancelWorkout,
         content: const Text(
           'Are you sure you want to cancel this workout? All progress will be lost.',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Continue Workout'),
+          GlassDialogButton(
+            label: 'Continue Workout',
+            onTap: () => Navigator.pop(context, false),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              AppStrings.cancel,
-              style: TextStyle(color: AppColors.error),
-            ),
+          GlassDialogButton(
+            label: AppStrings.cancel,
+            color: AppColors.error,
+            isPrimary: true,
+            onTap: () => Navigator.pop(context, true),
           ),
         ],
       ),
@@ -577,15 +654,19 @@ class _SetRowState extends ConsumerState<_SetRow> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSizes.spacing8),
-      padding: const EdgeInsets.all(AppSizes.spacing12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.spacing12,
+        vertical: AppSizes.spacing8,
+      ),
       decoration: BoxDecoration(
         color: set.isCompleted
-            ? AppColors.success.withOpacity(0.1)
-            : AppColors.surfaceSecondary,
-        borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+            ? AppColors.success.withValues(alpha: 0.1)
+            : Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
         border: Border.all(
-          color: set.isCompleted ? AppColors.success : Colors.transparent,
-          width: 2,
+          color: set.isCompleted
+              ? AppColors.success.withValues(alpha: 0.4)
+              : Colors.white.withValues(alpha: 0.12),
         ),
       ),
       child: Row(
@@ -594,15 +675,25 @@ class _SetRowState extends ConsumerState<_SetRow> {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: set.isCompleted ? AppColors.success : AppColors.surface,
+              color: set.isCompleted
+                  ? AppColors.success.withValues(alpha: 0.2)
+                  : Colors.white.withValues(alpha: 0.06),
               shape: BoxShape.circle,
+              border: Border.all(
+                color: set.isCompleted
+                    ? AppColors.success.withValues(alpha: 0.5)
+                    : Colors.white.withValues(alpha: 0.15),
+              ),
             ),
             child: Center(
               child: Text(
                 '${index + 1}',
                 style: TextStyle(
-                  color: set.isCompleted ? Colors.white : AppColors.textPrimary,
+                  color: set.isCompleted
+                      ? AppColors.success
+                      : AppColors.textPrimary,
                   fontWeight: FontWeight.bold,
+                  fontSize: 13,
                 ),
               ),
             ),
@@ -612,106 +703,175 @@ class _SetRowState extends ConsumerState<_SetRow> {
             child: Row(
               children: [
                 Expanded(
-                  child: TextFormField(
-                    controller: _weightController,
-                    focusNode: _weightFocusNode,
-                    decoration: const InputDecoration(
-                      labelText: 'Weight',
-                      suffixText: 'kg',
-                      isDense: true,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                     ),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
+                    child: TextFormField(
+                      controller: _weightController,
+                      focusNode: _weightFocusNode,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'kg',
+                        labelStyle: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                        floatingLabelBehavior: FloatingLabelBehavior.always,
+                        floatingLabelAlignment: FloatingLabelAlignment.center,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSizes.spacing8,
+                          vertical: AppSizes.spacing8,
+                        ),
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      onChanged: (value) {
+                        if (value.isEmpty) return;
+                        final weight = double.tryParse(value);
+                        if (weight != null) {
+                          ref
+                              .read(workoutViewModelProvider.notifier)
+                              .updateSet(
+                                exerciseLog.exerciseId,
+                                index,
+                                weight: weight,
+                              );
+                        }
+                      },
                     ),
-                    onChanged: (value) {
-                      if (value.isEmpty) return;
-                      final weight = double.tryParse(value);
-                      if (weight != null) {
-                        ref
-                            .read(workoutViewModelProvider.notifier)
-                            .updateSet(
-                              exerciseLog.exerciseId,
-                              index,
-                              weight: weight,
-                            );
-                      }
-                    },
                   ),
                 ),
                 const SizedBox(width: AppSizes.spacing8),
                 Expanded(
-                  child: TextFormField(
-                    controller: _repsController,
-                    focusNode: _repsFocusNode,
-                    decoration: const InputDecoration(
-                      labelText: 'Reps',
-                      isDense: true,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                     ),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      if (value.isEmpty) return;
-                      final reps = int.tryParse(value);
-                      if (reps != null) {
-                        ref
-                            .read(workoutViewModelProvider.notifier)
-                            .updateSet(
-                              exerciseLog.exerciseId,
-                              index,
-                              reps: reps,
-                            );
-                      }
-                    },
+                    child: TextFormField(
+                      controller: _repsController,
+                      focusNode: _repsFocusNode,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'reps',
+                        labelStyle: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                        floatingLabelBehavior: FloatingLabelBehavior.always,
+                        floatingLabelAlignment: FloatingLabelAlignment.center,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSizes.spacing8,
+                          vertical: AppSizes.spacing8,
+                        ),
+                      ),
+                      keyboardType: TextInputType.number,
+                      onChanged: (value) {
+                        if (value.isEmpty) return;
+                        final reps = int.tryParse(value);
+                        if (reps != null) {
+                          ref
+                              .read(workoutViewModelProvider.notifier)
+                              .updateSet(
+                                exerciseLog.exerciseId,
+                                index,
+                                reps: reps,
+                              );
+                        }
+                      },
+                    ),
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(width: AppSizes.spacing8),
-          if (!set.isCompleted)
-            IconButton(
-              icon: const FaIcon(FontAwesomeIcons.circleCheck),
-              color: AppColors.success,
-              tooltip: 'Mark as completed',
-              onPressed: () {
-                ref.read(workoutViewModelProvider.notifier).completeSet(
-                      exerciseLog.exerciseId,
-                      index,
-                    );
-              },
-            )
-          else ...[
-            IconButton(
-              icon: const FaIcon(FontAwesomeIcons.solidCircleCheck),
-              color: AppColors.success,
-              tooltip: 'Tap to edit this set',
-              onPressed: () {
+          GestureDetector(
+            onTap: () {
+              if (set.isCompleted) {
                 ref.read(workoutViewModelProvider.notifier).uncompleteSet(
                       exerciseLog.exerciseId,
                       index,
                     );
+              } else {
+                ref.read(workoutViewModelProvider.notifier).completeSet(
+                      exerciseLog.exerciseId,
+                      index,
+                    );
+              }
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: set.isCompleted
+                    ? AppColors.success
+                    : Colors.white.withValues(alpha: 0.06),
+                border: Border.all(
+                  color: set.isCompleted
+                      ? AppColors.success
+                      : Colors.white.withValues(alpha: 0.25),
+                  width: 2,
+                ),
+              ),
+              child: set.isCompleted
+                  ? const Center(
+                      child: Icon(
+                        Icons.check_rounded,
+                        size: 20,
+                        color: Colors.white,
+                      ),
+                    )
+                  : null,
+            ),
+          ),
+          if (set.isCompleted &&
+              ref.watch(workoutViewModelProvider).activeSession?.useRestTimer ==
+                  true) ...[
+            const SizedBox(width: AppSizes.spacing4),
+            GlassIconButton(
+              icon: FontAwesomeIcons.stopwatch,
+              color: AppColors.primary,
+              size: 36,
+              iconSize: 14,
+              tooltip: 'Start rest timer',
+              onTap: () {
+                final duration = ref
+                        .read(workoutViewModelProvider)
+                        .activeSession
+                        ?.restTimerDuration ??
+                    90;
+                ref
+                    .read(workoutViewModelProvider.notifier)
+                    .startRestTimer(duration);
               },
             ),
-            if (ref.watch(workoutViewModelProvider).activeSession?.useRestTimer == true)
-              IconButton(
-                icon: const FaIcon(FontAwesomeIcons.stopwatch, size: 20),
-                color: AppColors.primary,
-                tooltip: 'Start rest timer',
-                onPressed: () {
-                  final duration = ref.read(workoutViewModelProvider).activeSession?.restTimerDuration ?? 90;
-                  ref.read(workoutViewModelProvider.notifier).startRestTimer(duration);
-                },
-              ),
           ],
-          IconButton(
-            icon: const FaIcon(FontAwesomeIcons.trashCan, size: 20),
-            color: AppColors.error,
-            onPressed: () {
-              ref.read(workoutViewModelProvider.notifier).deleteSet(
-                    exerciseLog.exerciseId,
-                    index,
-                  );
-            },
-          ),
         ],
       ),
     );
@@ -742,31 +902,50 @@ class _SaveAsProgramDialogState extends State<_SaveAsProgramDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Save as Program?'),
+    return GlassDialog(
+      title: 'Save as Program?',
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('Would you like to save this workout as a reusable program?'),
+          Text(
+            'Would you like to save this workout as a reusable program?',
+            style: TextStyle(color: AppColors.textPrimary),
+          ),
           const SizedBox(height: AppSizes.spacing16),
-          TextFormField(
-            controller: _nameController,
-            decoration: const InputDecoration(
-              labelText: 'Program name',
-              hintText: 'e.g., My Custom Workout',
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
             ),
-            textCapitalization: TextCapitalization.words,
+            child: TextFormField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'Program name',
+                hintText: 'e.g., My Custom Workout',
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                filled: false,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: AppSizes.spacing16,
+                  vertical: AppSizes.spacing12,
+                ),
+              ),
+              textCapitalization: TextCapitalization.words,
+            ),
           ),
         ],
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('No thanks'),
+        GlassDialogButton(
+          label: 'No thanks',
+          onTap: () => Navigator.pop(context),
         ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, _nameController.text),
-          child: const Text('Save'),
+        GlassDialogButton(
+          label: 'Save',
+          isPrimary: true,
+          onTap: () => Navigator.pop(context, _nameController.text),
         ),
       ],
     );
@@ -838,8 +1017,8 @@ class _TimerPickerDialogState extends State<_TimerPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Set Timer'),
+    return GlassDialog(
+      title: 'Set Timer',
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -849,8 +1028,13 @@ class _TimerPickerDialogState extends State<_TimerPickerDialog> {
             children: [
               Column(
                 children: [
-                  SizedBox(
+                  Container(
                     width: 70,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                    ),
                     child: TextField(
                       controller: _minutesController,
                       focusNode: _minutesFocus,
@@ -859,9 +1043,10 @@ class _TimerPickerDialogState extends State<_TimerPickerDialog> {
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
                       ),
                       decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
+                        border: InputBorder.none,
                         contentPadding: EdgeInsets.symmetric(vertical: 12),
                       ),
                       onChanged: (_) => setState(() {}),
@@ -880,13 +1065,18 @@ class _TimerPickerDialogState extends State<_TimerPickerDialog> {
                 padding: EdgeInsets.symmetric(horizontal: AppSizes.spacing12),
                 child: Text(
                   ':',
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                 ),
               ),
               Column(
                 children: [
-                  SizedBox(
+                  Container(
                     width: 70,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                    ),
                     child: TextField(
                       controller: _secondsController,
                       focusNode: _secondsFocus,
@@ -895,9 +1085,10 @@ class _TimerPickerDialogState extends State<_TimerPickerDialog> {
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
                       ),
                       decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
+                        border: InputBorder.none,
                         contentPadding: EdgeInsets.symmetric(vertical: 12),
                       ),
                       onChanged: (_) => setState(() {}),
@@ -918,18 +1109,14 @@ class _TimerPickerDialogState extends State<_TimerPickerDialog> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              OutlinedButton(
-                onPressed: _totalSeconds >= 15
-                    ? () => _adjustTime(-15)
-                    : null,
-                child: const Text('-15s'),
+              GlassButton(
+                label: '-15s',
+                onTap: _totalSeconds >= 15 ? () => _adjustTime(-15) : null,
               ),
               const SizedBox(width: AppSizes.spacing12),
-              OutlinedButton(
-                onPressed: _totalSeconds < 600
-                    ? () => _adjustTime(15)
-                    : null,
-                child: const Text('+15s'),
+              GlassButton(
+                label: '+15s',
+                onTap: _totalSeconds < 600 ? () => _adjustTime(15) : null,
               ),
             ],
           ),
@@ -943,15 +1130,16 @@ class _TimerPickerDialogState extends State<_TimerPickerDialog> {
         ],
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+        GlassDialogButton(
+          label: 'Cancel',
+          onTap: () => Navigator.pop(context),
         ),
-        ElevatedButton(
-          onPressed: _totalSeconds > 0
+        GlassDialogButton(
+          label: 'Start',
+          isPrimary: true,
+          onTap: _totalSeconds > 0
               ? () => Navigator.pop(context, _totalSeconds)
               : null,
-          child: const Text('Start'),
         ),
       ],
     );

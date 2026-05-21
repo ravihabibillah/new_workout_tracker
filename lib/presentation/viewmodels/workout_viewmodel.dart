@@ -129,6 +129,18 @@ class WorkoutViewModel extends _$WorkoutViewModel {
     await _updateSession(updatedSession);
   }
 
+  Future<void> removeExerciseLog(String exerciseId) async {
+    final session = state.activeSession;
+    if (session == null) return;
+
+    final updatedLogs = session.exerciseLogs
+        .where((log) => log.exerciseId != exerciseId)
+        .toList();
+
+    final updatedSession = session.copyWith(exerciseLogs: updatedLogs);
+    await _updateSession(updatedSession);
+  }
+
   Future<void> addSet(String exerciseId, {double? weight, int? reps}) async {
     final session = state.activeSession;
     if (session == null) return;
