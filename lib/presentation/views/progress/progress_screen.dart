@@ -7,6 +7,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../viewmodels/progress_viewmodel.dart';
+import '../../widgets/liquid_glass.dart';
 import '../../widgets/shimmer_loading.dart';
 
 class ProgressScreen extends ConsumerWidget {
@@ -16,8 +17,7 @@ class ProgressScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(progressViewModelProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return GlassScaffold(
       appBar: AppBar(
         title: const Text(AppStrings.progress),
       ),
@@ -25,7 +25,12 @@ class ProgressScreen extends ConsumerWidget {
         onRefresh: () async {
           await ref.read(progressViewModelProvider.notifier).loadExerciseNames();
         },
-        child: _buildBody(context, ref, state),
+        child: Padding(
+          padding: EdgeInsets.only(
+            top: MediaQuery.of(context).padding.top + kToolbarHeight,
+          ),
+          child: _buildBody(context, ref, state),
+        ),
       ),
     );
   }
@@ -71,44 +76,28 @@ class ProgressScreen extends ConsumerWidget {
     WidgetRef ref,
     ProgressState state,
   ) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSizes.spacing16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              AppStrings.selectExercise,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: AppSizes.spacing12),
-            DropdownButtonFormField<String>(
-              value: state.selectedExercise,
-              decoration: InputDecoration(
-                hintText: 'Choose an exercise',
-                prefixIcon: Padding(
-                  padding: EdgeInsets.all(12),
-                  child: FaIcon(FontAwesomeIcons.dumbbell, size: 20),
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            AppStrings.selectExercise,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
-                filled: true,
-                fillColor: AppColors.surfaceSecondary,
-              ),
-              items: state.exerciseNames.map((name) {
-                return DropdownMenuItem(
-                  value: name,
-                  child: Text(name),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(progressViewModelProvider.notifier).selectExercise(value);
-                }
-              },
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: AppSizes.spacing12),
+          _GlassDropdown(
+            value: state.selectedExercise,
+            hint: 'Choose an exercise',
+            items: state.exerciseNames,
+            onChanged: (value) {
+              if (value != null) {
+                ref.read(progressViewModelProvider.notifier).selectExercise(value);
+              }
+            },
+          ),
+        ],
       ),
     );
   }
@@ -130,7 +119,7 @@ class ProgressScreen extends ConsumerWidget {
         Row(
           children: [
             Expanded(
-              child: _StatCard(
+              child: _GlassStatCard(
                 icon: FontAwesomeIcons.dumbbell,
                 label: AppStrings.maxWeight,
                 value: '${records['maxWeight']?.toStringAsFixed(1) ?? '0'} kg',
@@ -139,7 +128,7 @@ class ProgressScreen extends ConsumerWidget {
             ),
             const SizedBox(width: AppSizes.spacing12),
             Expanded(
-              child: _StatCard(
+              child: _GlassStatCard(
                 icon: FontAwesomeIcons.repeat,
                 label: AppStrings.maxReps,
                 value: '${records['maxReps'] ?? 0}',
@@ -152,7 +141,7 @@ class ProgressScreen extends ConsumerWidget {
         Row(
           children: [
             Expanded(
-              child: _StatCard(
+              child: _GlassStatCard(
                 icon: FontAwesomeIcons.arrowTrendUp,
                 label: AppStrings.totalVolume,
                 value: '${records['maxVolume']?.toStringAsFixed(0) ?? '0'} kg',
@@ -161,7 +150,7 @@ class ProgressScreen extends ConsumerWidget {
             ),
             const SizedBox(width: AppSizes.spacing12),
             Expanded(
-              child: _StatCard(
+              child: _GlassStatCard(
                 icon: FontAwesomeIcons.clockRotateLeft,
                 label: AppStrings.totalSessions,
                 value: '${state.progressData.length}',
@@ -175,23 +164,29 @@ class ProgressScreen extends ConsumerWidget {
   }
 
   Widget _buildViewDetailButton(BuildContext context, ProgressState state) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: () {
-          final exerciseName = state.selectedExercise!;
-          context.push(
-            '/progress/${Uri.encodeComponent(exerciseName)}?name=${Uri.encodeComponent(exerciseName)}',
-          );
-        },
-        icon: const FaIcon(FontAwesomeIcons.chartColumn, size: 16, color: AppColors.background),
-        label: const Text('View Detailed Progress'),
-        style: ElevatedButton.styleFrom(
-          foregroundColor: AppColors.background,
-          backgroundColor: AppColors.primary,
-          padding: const EdgeInsets.symmetric(vertical: AppSizes.spacing16),
-          textStyle: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+    return LiquidGlass(
+      tintColor: AppColors.primary,
+      tintOpacity: 0.2,
+      onTap: () {
+        final exerciseName = state.selectedExercise!;
+        context.push(
+          '/progress/${Uri.encodeComponent(exerciseName)}?name=${Uri.encodeComponent(exerciseName)}',
+        );
+      },
+      padding: const EdgeInsets.symmetric(vertical: AppSizes.spacing16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          FaIcon(FontAwesomeIcons.chartColumn, size: 16, color: AppColors.primary),
+          const SizedBox(width: AppSizes.spacing12),
+          Text(
+            'View Detailed Progress',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -283,13 +278,96 @@ class ProgressScreen extends ConsumerWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
+class _GlassDropdown extends StatelessWidget {
+  final String? value;
+  final String hint;
+  final List<String> items;
+  final ValueChanged<String?> onChanged;
+
+  const _GlassDropdown({
+    required this.hint,
+    required this.items,
+    required this.onChanged,
+    this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: ButtonTheme(
+          alignedDropdown: true,
+          child: DropdownButton<String>(
+            value: value,
+            isExpanded: true,
+            hint: Row(
+              children: [
+                FaIcon(FontAwesomeIcons.dumbbell,
+                    size: 16, color: AppColors.textSecondary),
+                const SizedBox(width: AppSizes.spacing12),
+                Text(
+                  hint,
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+            icon: const FaIcon(FontAwesomeIcons.chevronDown,
+                size: 14, color: AppColors.textSecondary),
+            dropdownColor: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.spacing16,
+              vertical: AppSizes.spacing4,
+            ),
+            selectedItemBuilder: (context) => items
+                .map(
+                  (name) => Row(
+                    children: [
+                      FaIcon(FontAwesomeIcons.dumbbell,
+                          size: 16, color: AppColors.primary),
+                      const SizedBox(width: AppSizes.spacing12),
+                      Expanded(
+                        child: Text(
+                          name,
+                          style: TextStyle(color: AppColors.textPrimary),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+                .toList(),
+            items: items
+                .map(
+                  (name) => DropdownMenuItem(
+                    value: name,
+                    child: Text(
+                      name,
+                      style: TextStyle(color: AppColors.textPrimary),
+                    ),
+                  ),
+                )
+                .toList(),
+            onChanged: onChanged,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GlassStatCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
   final Color color;
 
-  const _StatCard({
+  const _GlassStatCard({
     required this.icon,
     required this.label,
     required this.value,
@@ -298,12 +376,12 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSizes.spacing16),
+    return GlassCard(
+      child: SizedBox(
+        width: double.infinity,
         child: Column(
           children: [
-            FaIcon(icon, color: color, size: 32),
+            FaIcon(icon, color: color, size: 28),
             const SizedBox(height: AppSizes.spacing8),
             Text(
               value,
