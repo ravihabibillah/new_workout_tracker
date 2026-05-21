@@ -7,7 +7,9 @@
         {
             "name": "workout_tracker",
             "request": "launch",
-            "type": "dart"
+            "type": "dart",
+            "flutterMode": "debug"
+
         },
         {
             "name": "workout_tracker (profile mode)",
