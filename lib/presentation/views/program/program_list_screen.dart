@@ -8,6 +8,7 @@ import '../../../core/constants/app_sizes.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../viewmodels/program_viewmodel.dart';
+import '../../widgets/liquid_glass.dart';
 import '../../widgets/shimmer_loading.dart';
 
 class ProgramListScreen extends ConsumerWidget {
@@ -17,21 +18,27 @@ class ProgramListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(programViewModelProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return GlassScaffold(
       appBar: AppBar(
         title: const Text(AppStrings.programs),
+        actions: [
+          IconButton(
+            icon: const FaIcon(FontAwesomeIcons.plus, color: AppColors.primary),
+            tooltip: AppStrings.createProgram,
+            onPressed: () => context.push(AppRoutes.createProgram),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
           await ref.read(programViewModelProvider.notifier).loadPrograms();
         },
-        child: _buildBody(context, ref, state),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push(AppRoutes.createProgram),
-        icon: const FaIcon(FontAwesomeIcons.plus),
-        label: const Text(AppStrings.createProgram),
+        child: Padding(
+          padding: EdgeInsets.only(
+            top: MediaQuery.of(context).padding.top + kToolbarHeight,
+          ),
+          child: _buildBody(context, ref, state),
+        ),
       ),
     );
   }
@@ -63,11 +70,23 @@ class ProgramListScreen extends ConsumerWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSizes.spacing24),
-            ElevatedButton(
-              onPressed: () {
+            LiquidGlass(
+              tintColor: AppColors.primary,
+              tintOpacity: 0.2,
+              onTap: () {
                 ref.read(programViewModelProvider.notifier).loadPrograms();
               },
-              child: const Text('Retry'),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.spacing24,
+                vertical: AppSizes.spacing12,
+              ),
+              child: const Text(
+                'Retry',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),
@@ -79,108 +98,131 @@ class ProgramListScreen extends ConsumerWidget {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(AppSizes.spacing16),
+      padding: const EdgeInsets.fromLTRB(
+        AppSizes.spacing16,
+        AppSizes.spacing16,
+        AppSizes.spacing16,
+        AppSizes.spacing64 + AppSizes.spacing32,
+      ),
       itemCount: state.programs.length,
       itemBuilder: (context, index) {
         final program = state.programs[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: AppSizes.spacing12),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(AppSizes.spacing16),
-            leading: CircleAvatar(
-              backgroundColor: AppColors.primary,
-              radius: 28,
-              child: Text(
-                program.name[0].toUpperCase(),
-                style: const TextStyle(
-                  color: AppColors.background,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            title: Text(
-              program.name,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: AppSizes.spacing4),
-                if (program.description != null) ...[
-                  Text(
-                    program.description!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                  ),
-                  const SizedBox(height: AppSizes.spacing4),
-                ],
-                Row(
-                  children: [
-                    FaIcon(
-                      FontAwesomeIcons.dumbbell,
-                      size: 16,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: AppSizes.spacing4),
-                    Text(
-                      '${program.exercises.length} exercises',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            trailing: PopupMenuButton(
-              icon: const FaIcon(FontAwesomeIcons.ellipsisVertical),
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  child: Row(
-                    children: const [
-                      FaIcon(FontAwesomeIcons.penToSquare, size: 20),
-                      SizedBox(width: AppSizes.spacing8),
-                      Text(AppStrings.edit),
-                    ],
-                  ),
-                  onTap: () {
-                    Future.delayed(Duration.zero, () {
-                      context.push(
-                        AppRoutes.editProgram.replaceAll(':id', program.id),
-                      );
-                    });
-                  },
-                ),
-                PopupMenuItem(
-                  child: Row(
-                    children: const [
-                      FaIcon(FontAwesomeIcons.trashCan, size: 20, color: AppColors.error),
-                      SizedBox(width: AppSizes.spacing8),
-                      Text(
-                        AppStrings.delete,
-                        style: TextStyle(color: AppColors.error),
-                      ),
-                    ],
-                  ),
-                  onTap: () {
-                    Future.delayed(Duration.zero, () {
-                      _showDeleteConfirmation(context, ref, program.id);
-                    });
-                  },
-                ),
-              ],
-            ),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppSizes.spacing12),
+          child: GlassCard(
+            padding: const EdgeInsets.all(AppSizes.spacing16),
             onTap: () {
               context.push(
                 AppRoutes.programDetail.replaceAll(':id', program.id),
               );
             },
+            child: Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                  ),
+                  child: Center(
+                    child: Text(
+                      program.name[0].toUpperCase(),
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSizes.spacing16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        program.name,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: AppSizes.spacing4),
+                      if (program.description != null) ...[
+                        Text(
+                          program.description!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                        ),
+                        const SizedBox(height: AppSizes.spacing4),
+                      ],
+                      Row(
+                        children: [
+                          FaIcon(
+                            FontAwesomeIcons.dumbbell,
+                            size: 14,
+                            color: AppColors.textSecondary,
+                          ),
+                          const SizedBox(width: AppSizes.spacing4),
+                          Text(
+                            '${program.exercises.length} exercises',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuButton(
+                  icon: const FaIcon(FontAwesomeIcons.ellipsisVertical, size: 16),
+                  color: AppColors.surface.withValues(alpha: 0.95),
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      child: const Row(
+                        children: [
+                          FaIcon(FontAwesomeIcons.penToSquare, size: 18),
+                          SizedBox(width: AppSizes.spacing8),
+                          Text(AppStrings.edit),
+                        ],
+                      ),
+                      onTap: () {
+                        Future.delayed(Duration.zero, () {
+                          if (context.mounted) {
+                            context.push(
+                              AppRoutes.editProgram.replaceAll(':id', program.id),
+                            );
+                          }
+                        });
+                      },
+                    ),
+                    PopupMenuItem(
+                      child: const Row(
+                        children: [
+                          FaIcon(FontAwesomeIcons.trashCan, size: 18, color: AppColors.error),
+                          SizedBox(width: AppSizes.spacing8),
+                          Text(
+                            AppStrings.delete,
+                            style: TextStyle(color: AppColors.error),
+                          ),
+                        ],
+                      ),
+                      onTap: () {
+                        Future.delayed(Duration.zero, () {
+                          if (context.mounted) {
+                            _showDeleteConfirmation(context, ref, program.id);
+                          }
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -228,16 +270,20 @@ class ProgramListScreen extends ConsumerWidget {
   ) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(AppStrings.deleteProgram),
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      builder: (context) => GlassDialog(
+        title: AppStrings.deleteProgram,
         content: const Text('Are you sure you want to delete this program?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(AppStrings.cancel),
+          GlassDialogButton(
+            label: AppStrings.cancel,
+            onTap: () => Navigator.pop(context),
           ),
-          TextButton(
-            onPressed: () async {
+          GlassDialogButton(
+            label: AppStrings.delete,
+            color: AppColors.error,
+            isPrimary: true,
+            onTap: () async {
               Navigator.pop(context);
               try {
                 await ref
@@ -252,10 +298,6 @@ class ProgramListScreen extends ConsumerWidget {
                 }
               }
             },
-            child: const Text(
-              AppStrings.delete,
-              style: TextStyle(color: AppColors.error),
-            ),
           ),
         ],
       ),

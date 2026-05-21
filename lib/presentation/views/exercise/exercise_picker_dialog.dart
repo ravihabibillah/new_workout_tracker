@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -10,6 +11,7 @@ import '../../../core/utils/validators.dart';
 import '../../../domain/entities/exercise_entity.dart';
 import '../../../domain/entities/exercise_library_entity.dart';
 import '../../widgets/shimmer_loading.dart';
+import '../../widgets/liquid_glass.dart';
 import '../../viewmodels/exercise_library_viewmodel.dart';
 
 class ExercisePickerDialog extends ConsumerStatefulWidget {
@@ -55,58 +57,78 @@ class _ExercisePickerDialogState extends ConsumerState<ExercisePickerDialog>
 
   @override
   Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(AppSizes.radiusLarge);
+
     return Dialog(
       insetPadding: const EdgeInsets.all(AppSizes.spacing16),
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.8,
           maxWidth: 500,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSizes.spacing16,
-                AppSizes.spacing16,
-                AppSizes.spacing8,
-                0,
+        child: ClipRRect(
+          borderRadius: radius,
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface.withValues(alpha: 0.85),
+                borderRadius: radius,
+                border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
               ),
-              child: Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
-                    child: Text(
-                      AppStrings.addExercise,
-                      style: Theme.of(context).textTheme.titleLarge,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSizes.spacing16,
+                      AppSizes.spacing16,
+                      AppSizes.spacing8,
+                      0,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            AppStrings.addExercise,
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const FaIcon(FontAwesomeIcons.xmark),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
                     ),
                   ),
-                  IconButton(
-                    icon: const FaIcon(FontAwesomeIcons.xmark),
-                    onPressed: () => Navigator.pop(context),
+                  TabBar(
+                    controller: _tabController,
+                    tabs: const [
+                      Tab(text: AppStrings.selectFromLibrary),
+                      Tab(text: AppStrings.createNewExercise),
+                    ],
+                    labelColor: AppColors.primary,
+                    unselectedLabelColor: AppColors.textSecondary,
+                    indicatorColor: AppColors.primary,
+                    dividerColor: Colors.white.withValues(alpha: 0.08),
+                  ),
+                  Flexible(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildLibraryTab(),
+                        _buildCreateTab(),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-            TabBar(
-              controller: _tabController,
-              tabs: const [
-                Tab(text: AppStrings.selectFromLibrary),
-                Tab(text: AppStrings.createNewExercise),
-              ],
-              labelColor: AppColors.primary,
-              unselectedLabelColor: AppColors.textSecondary,
-              indicatorColor: AppColors.primary,
-            ),
-            Flexible(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildLibraryTab(),
-                  _buildCreateTab(),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -129,28 +151,34 @@ class _ExercisePickerDialogState extends ConsumerState<ExercisePickerDialog>
           padding: const EdgeInsets.all(AppSizes.spacing16),
           child: Column(
             children: [
-              TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: AppStrings.searchExercises,
-                  prefixIcon: const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: FaIcon(FontAwesomeIcons.magnifyingGlass, size: 20),
+              _GlassField(
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: AppStrings.searchExercises,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    filled: false,
+                    isDense: true,
+                    prefixIcon: const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: FaIcon(FontAwesomeIcons.magnifyingGlass, size: 18),
+                    ),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const FaIcon(FontAwesomeIcons.circleXmark, size: 18),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
+                        : null,
                   ),
-                  isDense: true,
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: const FaIcon(FontAwesomeIcons.circleXmark),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() => _searchQuery = '');
-                          },
-                        )
-                      : null,
+                  onChanged: (v) => setState(() => _searchQuery = v),
                 ),
-                onChanged: (v) => setState(() => _searchQuery = v),
               ),
-              const SizedBox(height: AppSizes.spacing8),
+              const SizedBox(height: AppSizes.spacing12),
               _buildMuscleGroupFilter(),
             ],
           ),
@@ -171,55 +199,69 @@ class _ExercisePickerDialogState extends ConsumerState<ExercisePickerDialog>
                             .contains(exercise.name.toLowerCase());
                         final isSelected =
                             _selectedExercises.contains(exercise);
-                        return Card(
-                          margin:
-                              const EdgeInsets.only(bottom: AppSizes.spacing8),
-                          child: CheckboxListTile(
-                            value: alreadyAdded ? true : isSelected,
-                            onChanged: alreadyAdded
-                                ? null
-                                : (checked) {
-                                    setState(() {
-                                      if (checked == true) {
-                                        _selectedExercises.add(exercise);
-                                      } else {
-                                        _selectedExercises.remove(exercise);
-                                      }
-                                    });
-                                  },
-                            controlAffinity:
-                                ListTileControlAffinity.trailing,
-                            secondary: CircleAvatar(
-                              backgroundColor: alreadyAdded
-                                  ? AppColors.textSecondary.withOpacity(0.3)
-                                  : AppColors.surfaceSecondary,
-                              child: FaIcon(
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: AppSizes.spacing8),
+                          child: _GlassListTile(
+                            highlight: isSelected,
+                            child: ListTile(
+                              onTap: alreadyAdded
+                                  ? null
+                                  : () {
+                                      setState(() {
+                                        if (isSelected) {
+                                          _selectedExercises.remove(exercise);
+                                        } else {
+                                          _selectedExercises.add(exercise);
+                                        }
+                                      });
+                                    },
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                              ),
+                              leading: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: alreadyAdded
+                                      ? AppColors.textSecondary.withValues(alpha: 0.15)
+                                      : Colors.white.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                                ),
+                                child: Center(
+                                  child: FaIcon(
+                                    alreadyAdded
+                                        ? FontAwesomeIcons.check
+                                        : FontAwesomeIcons.dumbbell,
+                                    color: alreadyAdded
+                                        ? AppColors.textSecondary
+                                        : AppColors.textPrimary,
+                                    size: 16,
+                                  ),
+                                ),
+                              ),
+                              title: Text(
+                                exercise.name,
+                                style: TextStyle(
+                                  color: alreadyAdded
+                                      ? AppColors.textSecondary
+                                      : AppColors.textPrimary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              subtitle: Text(
                                 alreadyAdded
-                                    ? FontAwesomeIcons.check
-                                    : FontAwesomeIcons.dumbbell,
-                                color: alreadyAdded
-                                    ? AppColors.textSecondary
-                                    : AppColors.textPrimary,
-                                size: 20,
+                                    ? '${exercise.muscleGroup} • Added'
+                                    : exercise.muscleGroup,
+                                style: TextStyle(
+                                  color: alreadyAdded
+                                      ? AppColors.textSecondary
+                                      : AppColors.primary,
+                                  fontSize: 12,
+                                ),
                               ),
-                            ),
-                            title: Text(
-                              exercise.name,
-                              style: TextStyle(
-                                color: alreadyAdded
-                                    ? AppColors.textSecondary
-                                    : AppColors.textPrimary,
-                              ),
-                            ),
-                            subtitle: Text(
-                              alreadyAdded
-                                  ? '${exercise.muscleGroup} • Added'
-                                  : exercise.muscleGroup,
-                              style: TextStyle(
-                                color: alreadyAdded
-                                    ? AppColors.textSecondary
-                                    : AppColors.primary,
-                                fontSize: 12,
+                              trailing: _GlassCircularCheckbox(
+                                value: alreadyAdded ? true : isSelected,
+                                disabled: alreadyAdded,
                               ),
                             ),
                           ),
@@ -231,11 +273,9 @@ class _ExercisePickerDialogState extends ConsumerState<ExercisePickerDialog>
           Container(
             padding: const EdgeInsets.all(AppSizes.spacing16),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: Colors.white.withValues(alpha: 0.04),
               border: Border(
-                top: BorderSide(
-                  color: AppColors.textSecondary.withOpacity(0.2),
-                ),
+                top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
               ),
             ),
             child: Row(
@@ -248,16 +288,70 @@ class _ExercisePickerDialogState extends ConsumerState<ExercisePickerDialog>
                         ),
                   ),
                 ),
-                TextButton(
-                  onPressed: () =>
-                      setState(() => _selectedExercises.clear()),
-                  child: const Text('Clear'),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () =>
+                          setState(() => _selectedExercises.clear()),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSizes.spacing16,
+                          vertical: AppSizes.spacing8,
+                        ),
+                        child: Text(
+                          'Clear',
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(width: AppSizes.spacing8),
-                FilledButton.icon(
-                  onPressed: _addSelectedFromLibrary,
-                  icon: const FaIcon(FontAwesomeIcons.plus),
-                  label: const Text('Add Selected'),
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _addSelectedFromLibrary,
+                      borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSizes.spacing16,
+                          vertical: AppSizes.spacing8,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            FaIcon(FontAwesomeIcons.plus, size: 12, color: AppColors.primary),
+                            const SizedBox(width: AppSizes.spacing8),
+                            Text(
+                              'Add Selected',
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -288,24 +382,17 @@ class _ExercisePickerDialogState extends ConsumerState<ExercisePickerDialog>
         itemBuilder: (context, index) {
           final group = muscleGroups[index];
           final isAll = group == AppStrings.allMuscleGroups;
-          final isSelected =
-              isAll ? _selectedMuscleGroup == null : _selectedMuscleGroup == group;
-          return FilterChip(
-            label: Text(group),
+          final isSelected = isAll
+              ? _selectedMuscleGroup == null
+              : _selectedMuscleGroup == group;
+          return GlassChip(
+            label: group,
             selected: isSelected,
-            onSelected: (_) {
+            onTap: () {
               setState(() {
                 _selectedMuscleGroup = isAll ? null : group;
               });
             },
-            selectedColor: AppColors.primary.withOpacity(0.2),
-            checkmarkColor: AppColors.primary,
-            labelStyle: TextStyle(
-              color: isSelected ? AppColors.primary : AppColors.textSecondary,
-              fontSize: 11,
-            ),
-            visualDensity: VisualDensity.compact,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           );
         },
       ),
@@ -352,72 +439,137 @@ class _ExercisePickerDialogState extends ConsumerState<ExercisePickerDialog>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: AppStrings.exerciseName,
-                hintText: 'e.g., Bench Press',
-                prefixIcon: Padding(
-                  padding: EdgeInsets.all(12),
-                  child: FaIcon(FontAwesomeIcons.dumbbell, size: 20),
+            _GlassField(
+              child: TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: AppStrings.exerciseName,
+                  hintText: 'e.g., Bench Press',
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  focusedErrorBorder: InputBorder.none,
+                  filled: false,
+                  prefixIcon: Padding(
+                    padding: EdgeInsets.all(12),
+                    child: FaIcon(FontAwesomeIcons.dumbbell, size: 18, color: AppColors.primary),
+                  ),
                 ),
+                textCapitalization: TextCapitalization.words,
+                validator: (v) =>
+                    Validators.required(v, fieldName: 'Exercise name'),
               ),
-              textCapitalization: TextCapitalization.words,
-              validator: (v) =>
-                  Validators.required(v, fieldName: 'Exercise name'),
             ),
-            const SizedBox(height: AppSizes.spacing16),
-            DropdownButtonFormField<String>(
-              value: _newExerciseMuscleGroup,
-              decoration: const InputDecoration(
-                labelText: AppStrings.muscleGroup,
-                prefixIcon: Padding(
-                  padding: EdgeInsets.all(12),
-                  child: FaIcon(FontAwesomeIcons.tag, size: 20),
+            const SizedBox(height: AppSizes.spacing12),
+            _GlassField(
+              child: DropdownButtonFormField<String>(
+                value: _newExerciseMuscleGroup,
+                decoration: const InputDecoration(
+                  labelText: AppStrings.muscleGroup,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  filled: false,
+                  prefixIcon: Padding(
+                    padding: EdgeInsets.all(12),
+                    child: FaIcon(FontAwesomeIcons.tag, size: 18, color: AppColors.primary),
+                  ),
                 ),
+                dropdownColor: AppColors.surface,
+                items: [
+                  AppStrings.chest,
+                  AppStrings.back,
+                  AppStrings.shoulders,
+                  AppStrings.arms,
+                  AppStrings.legs,
+                  AppStrings.core,
+                  AppStrings.fullBody,
+                  AppStrings.cardio,
+                ].map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
+                onChanged: (v) {
+                  if (v != null) setState(() => _newExerciseMuscleGroup = v);
+                },
               ),
-              items: [
-                AppStrings.chest,
-                AppStrings.back,
-                AppStrings.shoulders,
-                AppStrings.arms,
-                AppStrings.legs,
-                AppStrings.core,
-                AppStrings.fullBody,
-      AppStrings.cardio,
-              ].map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
-              onChanged: (v) {
-                if (v != null) setState(() => _newExerciseMuscleGroup = v);
-              },
             ),
-            const SizedBox(height: AppSizes.spacing16),
-            TextFormField(
-              controller: _descController,
-              decoration: const InputDecoration(
-                labelText: AppStrings.exerciseDescription,
-                hintText: 'Optional notes',
-                prefixIcon: Padding(
-                  padding: EdgeInsets.all(12),
-                  child: FaIcon(FontAwesomeIcons.fileLines, size: 20),
+            const SizedBox(height: AppSizes.spacing12),
+            _GlassField(
+              child: TextFormField(
+                controller: _descController,
+                decoration: const InputDecoration(
+                  labelText: AppStrings.exerciseDescription,
+                  hintText: 'Optional notes',
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  filled: false,
+                  prefixIcon: Padding(
+                    padding: EdgeInsets.all(12),
+                    child: FaIcon(FontAwesomeIcons.fileLines, size: 18, color: AppColors.primary),
+                  ),
                 ),
+                maxLines: 2,
+                textCapitalization: TextCapitalization.sentences,
               ),
-              maxLines: 2,
-              textCapitalization: TextCapitalization.sentences,
             ),
             const SizedBox(height: AppSizes.spacing24),
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => _createAndAdd(saveToLibrary: false),
-                    child: const Text('Add Only'),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _createAndAdd(saveToLibrary: false),
+                        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: AppSizes.spacing16),
+                          child: Center(
+                            child: Text(
+                              'Add Only',
+                              style: TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: AppSizes.spacing12),
                 Expanded(
-                  child: FilledButton(
-                    onPressed: () => _createAndAdd(saveToLibrary: true),
-                    child: const Text('Add & Save'),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _createAndAdd(saveToLibrary: true),
+                        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: AppSizes.spacing16),
+                          child: Center(
+                            child: Text(
+                              'Add & Save',
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -486,6 +638,89 @@ class _ExercisePickerDialogState extends ConsumerState<ExercisePickerDialog>
     );
 
     if (mounted) Navigator.pop(context, [exercise]);
+  }
+}
+
+class _GlassField extends StatelessWidget {
+  final Widget child;
+
+  const _GlassField({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: child,
+    );
+  }
+}
+
+class _GlassListTile extends StatelessWidget {
+  final Widget child;
+  final bool highlight;
+
+  const _GlassListTile({required this.child, this.highlight = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: highlight
+            ? AppColors.primary.withValues(alpha: 0.1)
+            : Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+        border: Border.all(
+          color: highlight
+              ? AppColors.primary.withValues(alpha: 0.4)
+              : Colors.white.withValues(alpha: 0.1),
+        ),
+      ),
+      child: child,
+    );
+  }
+}
+
+class _GlassCircularCheckbox extends StatelessWidget {
+  final bool value;
+  final bool disabled;
+
+  const _GlassCircularCheckbox({
+    required this.value,
+    this.disabled = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: value
+            ? (disabled ? AppColors.textSecondary.withValues(alpha: 0.3) : AppColors.primary)
+            : Colors.white.withValues(alpha: 0.06),
+        border: Border.all(
+          color: value
+              ? (disabled ? AppColors.textSecondary.withValues(alpha: 0.5) : AppColors.primary)
+              : Colors.white.withValues(alpha: 0.25),
+          width: 2,
+        ),
+      ),
+      child: value
+          ? const Center(
+              child: Icon(
+                Icons.check_rounded,
+                size: 16,
+                color: AppColors.background,
+              ),
+            )
+          : null,
+    );
   }
 }
 

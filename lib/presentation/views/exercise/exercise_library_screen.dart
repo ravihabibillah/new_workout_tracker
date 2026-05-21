@@ -8,6 +8,7 @@ import '../../../core/extensions/context_extensions.dart';
 import '../../../core/utils/validators.dart';
 import '../../../domain/entities/exercise_library_entity.dart';
 import '../../viewmodels/exercise_library_viewmodel.dart';
+import '../../widgets/liquid_glass.dart';
 import '../../widgets/shimmer_loading.dart';
 
 class ExerciseLibraryScreen extends ConsumerStatefulWidget {
@@ -40,27 +41,50 @@ class _ExerciseLibraryScreenState
           filtered.where((e) => e.muscleGroup == _selectedMuscleGroup).toList();
     }
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return GlassScaffold(
       appBar: AppBar(
         title: const Text(AppStrings.exerciseLibrary),
       ),
-      body: Column(
-        children: [
-          _buildSearchAndFilter(state),
-          Expanded(
-          child: state.isLoading
-              ? const ShimmerExerciseList()
-                : filtered.isEmpty
-                    ? _buildEmptyState(state.exercises.isEmpty)
-                    : _buildExerciseList(filtered),
-          ),
-        ],
+      body: Padding(
+        padding: EdgeInsets.only(
+          top: MediaQuery.of(context).padding.top + kToolbarHeight,
+        ),
+        child: Column(
+          children: [
+            _buildSearchAndFilter(state),
+            Expanded(
+              child: state.isLoading
+                  ? const ShimmerExerciseList()
+                  : filtered.isEmpty
+                      ? _buildEmptyState(state.exercises.isEmpty)
+                      : _buildExerciseList(filtered),
+            ),
+          ],
+        ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showExerciseFormDialog(context),
-        icon: const FaIcon(FontAwesomeIcons.plus),
-        label: const Text(AppStrings.createExercise),
+      floatingActionButton: LiquidGlass(
+        borderRadius: AppSizes.radiusLarge,
+        tintColor: AppColors.primary,
+        tintOpacity: 0.25,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.spacing24,
+          vertical: AppSizes.spacing16,
+        ),
+        onTap: () => _showExerciseFormDialog(context),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FaIcon(FontAwesomeIcons.plus, color: AppColors.primary, size: 16),
+            const SizedBox(width: AppSizes.spacing8),
+            Text(
+              AppStrings.createExercise,
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -87,27 +111,42 @@ class _ExerciseLibraryScreenState
       ),
       child: Column(
         children: [
-          TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: AppStrings.searchExercises,
-              prefixIcon: const Padding(
-                padding: EdgeInsets.all(12),
-                child: FaIcon(FontAwesomeIcons.magnifyingGlass, size: 20),
-              ),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
-                      icon: const FaIcon(FontAwesomeIcons.circleXmark),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() => _searchQuery = '');
-                      },
-                    )
-                  : null,
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.spacing12,
+              vertical: AppSizes.spacing4,
             ),
-            onChanged: (value) => setState(() => _searchQuery = value),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+            ),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: AppStrings.searchExercises,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                filled: false,
+                prefixIcon: const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: FaIcon(FontAwesomeIcons.magnifyingGlass, size: 18),
+                ),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const FaIcon(FontAwesomeIcons.circleXmark, size: 18),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                      )
+                    : null,
+              ),
+              onChanged: (value) => setState(() => _searchQuery = value),
+            ),
           ),
-          const SizedBox(height: AppSizes.spacing8),
+          const SizedBox(height: AppSizes.spacing12),
           SizedBox(
             height: 36,
             child: ListView.separated(
@@ -121,22 +160,14 @@ class _ExerciseLibraryScreenState
                 final isSelected = isAll
                     ? _selectedMuscleGroup == null
                     : _selectedMuscleGroup == group;
-                return FilterChip(
-                  label: Text(group),
+                return GlassChip(
+                  label: group,
                   selected: isSelected,
-                  onSelected: (_) {
+                  onTap: () {
                     setState(() {
                       _selectedMuscleGroup = isAll ? null : group;
                     });
                   },
-                  selectedColor: AppColors.primary.withOpacity(0.2),
-                  checkmarkColor: AppColors.primary,
-                  labelStyle: TextStyle(
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
                 );
               },
             ),
@@ -152,85 +183,105 @@ class _ExerciseLibraryScreenState
         AppSizes.spacing16,
         AppSizes.spacing8,
         AppSizes.spacing16,
-        AppSizes.spacing64,
+        AppSizes.spacing64 + AppSizes.spacing32,
       ),
       itemCount: exercises.length,
       itemBuilder: (context, index) {
         final exercise = exercises[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: AppSizes.spacing8),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: AppColors.surfaceSecondary,
-              child: Text(
-                exercise.name[0].toUpperCase(),
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            title: Text(
-              exercise.name,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppSizes.spacing12),
+          child: GlassCard(
+            padding: const EdgeInsets.all(AppSizes.spacing12),
+            child: Row(
               children: [
-                Text(
-                  exercise.muscleGroup,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.primary,
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                  ),
+                  child: Center(
+                    child: Text(
+                      exercise.name[0].toUpperCase(),
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
                       ),
-                ),
-                if (exercise.description != null &&
-                    exercise.description!.isNotEmpty)
-                  Text(
-                    exercise.description!,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-              ],
-            ),
-            isThreeLine: exercise.description != null &&
-                exercise.description!.isNotEmpty,
-            trailing: PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'edit') {
-                  _showExerciseFormDialog(context, exercise: exercise);
-                } else if (value == 'delete') {
-                  _confirmDelete(context, exercise);
-                }
-              },
-              itemBuilder: (_) => [
-                const PopupMenuItem(
-                  value: 'edit',
-                  child: Row(
-                    children: [
-                      FaIcon(FontAwesomeIcons.penToSquare, size: 18),
-                      SizedBox(width: AppSizes.spacing8),
-                      Text(AppStrings.edit),
-                    ],
+                    ),
                   ),
                 ),
-                const PopupMenuItem(
-                  value: 'delete',
-                  child: Row(
+                const SizedBox(width: AppSizes.spacing12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      FaIcon(FontAwesomeIcons.trashCan, size: 18, color: AppColors.error),
-                      SizedBox(width: AppSizes.spacing8),
                       Text(
-                        AppStrings.delete,
-                        style: TextStyle(color: AppColors.error),
+                        exercise.name,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
                       ),
+                      const SizedBox(height: AppSizes.spacing4),
+                      Text(
+                        exercise.muscleGroup,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.primary,
+                            ),
+                      ),
+                      if (exercise.description != null &&
+                          exercise.description!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: AppSizes.spacing4),
+                          child: Text(
+                            exercise.description!,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                     ],
                   ),
+                ),
+                PopupMenuButton<String>(
+                  icon: const FaIcon(FontAwesomeIcons.ellipsisVertical, size: 16),
+                  color: AppColors.surface,
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      _showExerciseFormDialog(context, exercise: exercise);
+                    } else if (value == 'delete') {
+                      _confirmDelete(context, exercise);
+                    }
+                  },
+                  itemBuilder: (_) => [
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          FaIcon(FontAwesomeIcons.penToSquare, size: 16),
+                          SizedBox(width: AppSizes.spacing8),
+                          Text(AppStrings.edit),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          FaIcon(FontAwesomeIcons.trashCan, size: 16, color: AppColors.error),
+                          SizedBox(width: AppSizes.spacing8),
+                          Text(
+                            AppStrings.delete,
+                            style: TextStyle(color: AppColors.error),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -287,10 +338,9 @@ class _ExerciseLibraryScreenState
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          isEditing ? AppStrings.editExercise : AppStrings.createExercise,
-        ),
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      builder: (context) => GlassDialog(
+        title: isEditing ? AppStrings.editExercise : AppStrings.createExercise,
         content: StatefulBuilder(
           builder: (context, setDialogState) => Form(
             key: formKey,
@@ -298,63 +348,99 @@ class _ExerciseLibraryScreenState
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextFormField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: AppStrings.exerciseName,
-                      hintText: 'e.g., Bench Press',
-                      prefixIcon: Padding(
-                        padding: EdgeInsets.all(12),
-                        child: FaIcon(FontAwesomeIcons.dumbbell, size: 20),
-                      ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
                     ),
-                    textCapitalization: TextCapitalization.words,
-                    autofocus: true,
-                    validator: (v) =>
-                        Validators.required(v, fieldName: 'Exercise name'),
+                    child: TextFormField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: AppStrings.exerciseName,
+                        hintText: 'e.g., Bench Press',
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        errorBorder: InputBorder.none,
+                        focusedErrorBorder: InputBorder.none,
+                        filled: false,
+                        prefixIcon: Padding(
+                          padding: EdgeInsets.all(12),
+                          child: FaIcon(FontAwesomeIcons.dumbbell, size: 18, color: AppColors.primary),
+                        ),
+                      ),
+                      textCapitalization: TextCapitalization.words,
+                      autofocus: true,
+                      validator: (v) =>
+                          Validators.required(v, fieldName: 'Exercise name'),
+                    ),
                   ),
-                  const SizedBox(height: AppSizes.spacing16),
-                  DropdownButtonFormField<String>(
-                    value: selectedMuscleGroup,
-                    decoration: const InputDecoration(
-                      labelText: AppStrings.muscleGroup,
-                      prefixIcon: Padding(
-                        padding: EdgeInsets.all(12),
-                        child: FaIcon(FontAwesomeIcons.tag, size: 20),
-                      ),
+                  const SizedBox(height: AppSizes.spacing12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
                     ),
-                    items: [
-                      AppStrings.chest,
-                      AppStrings.back,
-                      AppStrings.shoulders,
-                      AppStrings.arms,
-                      AppStrings.legs,
-                      AppStrings.core,
-                      AppStrings.fullBody,
-      AppStrings.cardio,
-                    ]
-                        .map((g) =>
-                            DropdownMenuItem(value: g, child: Text(g)))
-                        .toList(),
-                    onChanged: (v) {
-                      if (v != null) {
-                        setDialogState(() => selectedMuscleGroup = v);
-                      }
-                    },
+                    child: DropdownButtonFormField<String>(
+                      value: selectedMuscleGroup,
+                      decoration: const InputDecoration(
+                        labelText: AppStrings.muscleGroup,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
+                        prefixIcon: Padding(
+                          padding: EdgeInsets.all(12),
+                          child: FaIcon(FontAwesomeIcons.tag, size: 18, color: AppColors.primary),
+                        ),
+                      ),
+                      dropdownColor: AppColors.surface,
+                      items: [
+                        AppStrings.chest,
+                        AppStrings.back,
+                        AppStrings.shoulders,
+                        AppStrings.arms,
+                        AppStrings.legs,
+                        AppStrings.core,
+                        AppStrings.fullBody,
+                        AppStrings.cardio,
+                      ]
+                          .map((g) =>
+                              DropdownMenuItem(value: g, child: Text(g)))
+                          .toList(),
+                      onChanged: (v) {
+                        if (v != null) {
+                          setDialogState(() => selectedMuscleGroup = v);
+                        }
+                      },
+                    ),
                   ),
-                  const SizedBox(height: AppSizes.spacing16),
-                  TextFormField(
-                    controller: descController,
-                    decoration: const InputDecoration(
-                      labelText: AppStrings.exerciseDescription,
-                      hintText: 'Optional notes or instructions',
-                      prefixIcon: Padding(
-                        padding: EdgeInsets.all(12),
-                        child: FaIcon(FontAwesomeIcons.fileLines, size: 20),
-                      ),
+                  const SizedBox(height: AppSizes.spacing12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
                     ),
-                    maxLines: 2,
-                    textCapitalization: TextCapitalization.sentences,
+                    child: TextFormField(
+                      controller: descController,
+                      decoration: const InputDecoration(
+                        labelText: AppStrings.exerciseDescription,
+                        hintText: 'Optional notes or instructions',
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
+                        prefixIcon: Padding(
+                          padding: EdgeInsets.all(12),
+                          child: FaIcon(FontAwesomeIcons.fileLines, size: 18, color: AppColors.primary),
+                        ),
+                      ),
+                      maxLines: 2,
+                      textCapitalization: TextCapitalization.sentences,
+                    ),
                   ),
                 ],
               ),
@@ -362,12 +448,14 @@ class _ExerciseLibraryScreenState
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(AppStrings.cancel),
+          GlassDialogButton(
+            label: AppStrings.cancel,
+            onTap: () => Navigator.pop(context),
           ),
-          TextButton(
-            onPressed: () async {
+          GlassDialogButton(
+            label: AppStrings.save,
+            isPrimary: true,
+            onTap: () async {
               if (!formKey.currentState!.validate()) return;
               Navigator.pop(context);
               try {
@@ -384,7 +472,7 @@ class _ExerciseLibraryScreenState
                           updatedAt: DateTime.now(),
                         ),
                       );
-                  if (mounted) context.showSnackBar('Exercise updated');
+                  if (mounted && context.mounted) context.showSnackBar('Exercise updated');
                 } else {
                   await ref
                       .read(exerciseLibraryViewModelProvider.notifier)
@@ -395,15 +483,14 @@ class _ExerciseLibraryScreenState
                             ? null
                             : descController.text.trim(),
                       );
-                  if (mounted) context.showSnackBar('Exercise created');
+                  if (mounted && context.mounted) context.showSnackBar('Exercise created');
                 }
               } catch (_) {
-                if (mounted) {
+                if (mounted && context.mounted) {
                   context.showErrorSnackBar('Failed to save exercise');
                 }
               }
             },
-            child: const Text(AppStrings.save),
           ),
         ],
       ),
@@ -413,34 +500,34 @@ class _ExerciseLibraryScreenState
   void _confirmDelete(BuildContext context, ExerciseLibraryEntity exercise) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(AppStrings.delete),
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      builder: (context) => GlassDialog(
+        title: AppStrings.delete,
         content: Text(
           'Delete "${exercise.name}"? This will not affect existing programs.',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(AppStrings.cancel),
+          GlassDialogButton(
+            label: AppStrings.cancel,
+            onTap: () => Navigator.pop(context),
           ),
-          TextButton(
-            onPressed: () async {
+          GlassDialogButton(
+            label: AppStrings.delete,
+            color: AppColors.error,
+            isPrimary: true,
+            onTap: () async {
               Navigator.pop(context);
               try {
                 await ref
                     .read(exerciseLibraryViewModelProvider.notifier)
                     .deleteExercise(exercise.id);
-                if (mounted) context.showSnackBar('Exercise deleted');
+                if (mounted && context.mounted) context.showSnackBar('Exercise deleted');
               } catch (_) {
-                if (mounted) {
+                if (mounted && context.mounted) {
                   context.showErrorSnackBar('Failed to delete exercise');
                 }
               }
             },
-            child: const Text(
-              AppStrings.delete,
-              style: TextStyle(color: AppColors.error),
-            ),
           ),
         ],
       ),
