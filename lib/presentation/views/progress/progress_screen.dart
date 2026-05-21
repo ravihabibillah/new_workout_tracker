@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_sizes.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../viewmodels/progress_viewmodel.dart';
 import '../../widgets/shimmer_loading.dart';
 
@@ -183,8 +184,14 @@ class ProgressScreen extends ConsumerWidget {
             '/progress/${Uri.encodeComponent(exerciseName)}?name=${Uri.encodeComponent(exerciseName)}',
           );
         },
-        icon: FaIcon(FontAwesomeIcons.chartColumn),
+        icon: const FaIcon(FontAwesomeIcons.chartColumn, size: 16, color: AppColors.background),
         label: const Text('View Detailed Progress'),
+        style: ElevatedButton.styleFrom(
+          foregroundColor: AppColors.background,
+          backgroundColor: AppColors.primary,
+          padding: const EdgeInsets.symmetric(vertical: AppSizes.spacing16),
+          textStyle: const TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
