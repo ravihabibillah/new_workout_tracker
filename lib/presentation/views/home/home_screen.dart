@@ -5,11 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_sizes.dart';
+import '../../../core/extensions/context_extensions.dart';
 import '../../../core/router/app_router.dart';
-import '../../../core/utils/global_keys.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../viewmodels/program_viewmodel.dart';
 import '../../viewmodels/workout_viewmodel.dart';
+import '../../widgets/liquid_glass.dart';
 import '../../widgets/shimmer_loading.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -28,17 +29,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final programState = ref.watch(programViewModelProvider);
     final workoutState = ref.watch(workoutViewModelProvider);
 
-    if (!_programsLoaded && user != null) {
+    if (user != null && !_programsLoaded) {
       _programsLoaded = true;
-      Future.microtask(() {
-        ref.read(programViewModelProvider.notifier).loadPrograms();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(programViewModelProvider.notifier).loadPrograms();
+        }
       });
     }
 
+    if (user == null) {
+      _programsLoaded = false;
+    }
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text(AppStrings.appName),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          AppStrings.appName,
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         actions: [
           IconButton(
             icon: const FaIcon(FontAwesomeIcons.gear),
@@ -46,33 +62,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await ref.read(programViewModelProvider.notifier).loadPrograms();
-        },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(AppSizes.spacing16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildWelcomeSection(context, user?.displayName),
-              const SizedBox(height: AppSizes.spacing24),
-              if (workoutState.activeSession != null)
-                _buildActiveWorkoutCard(context, workoutState),
-              const SizedBox(height: AppSizes.spacing24),
-              _buildQuickActions(context, ref),
-              const SizedBox(height: AppSizes.spacing24),
-              _buildRecentPrograms(context, programState),
-            ],
+      body: GlassBackground(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await ref.read(programViewModelProvider.notifier).loadPrograms();
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + kToolbarHeight + AppSizes.spacing16,
+              left: AppSizes.spacing16,
+              right: AppSizes.spacing16,
+              bottom: 100,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildWelcomeSection(context, user?.displayName),
+                const SizedBox(height: AppSizes.spacing24),
+                if (workoutState.activeSession != null)
+                  _buildActiveWorkoutCard(context, workoutState),
+                if (workoutState.activeSession != null)
+                  const SizedBox(height: AppSizes.spacing24),
+                _buildRecentPrograms(context, programState),
+              ],
+            ),
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showStartWorkoutDialog(context, ref),
-        icon: const FaIcon(FontAwesomeIcons.play),
-        label: const Text('Start Workout'),
-      ),
+      floatingActionButton: null,
     );
   }
 
@@ -100,119 +118,60 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildActiveWorkoutCard(BuildContext context, WorkoutState state) {
     final session = state.activeSession!;
-    return Card(
-      color: AppColors.primary.withOpacity(0.1),
-      child: InkWell(
-        onTap: () {
-          if (session.isQuickWorkout || session.programId == null) {
-            context.push(AppRoutes.quickWorkout);
-          } else {
-            context.push(
-              AppRoutes.workout.replaceAll(':programId', session.programId!),
-            );
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(AppSizes.spacing16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSizes.spacing12),
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                ),
-                child: const FaIcon(
-                  FontAwesomeIcons.dumbbell,
-                  color: AppColors.background,
-                ),
-              ),
-              const SizedBox(width: AppSizes.spacing16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Workout in Progress',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: AppSizes.spacing4),
-                    Text(
-                      session.programName,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-              const FaIcon(
-                FontAwesomeIcons.chevronRight,
-                color: AppColors.primary,
-                size: 20,
-              ),
-            ],
+    return LiquidGlass(
+      tintColor: AppColors.primary,
+      tintOpacity: 0.15,
+      onTap: () {
+        if (session.isQuickWorkout || session.programId == null) {
+          context.push(AppRoutes.quickWorkout);
+        } else {
+          context.push(
+            AppRoutes.workout.replaceAll(':programId', session.programId!),
+          );
+        }
+      },
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(AppSizes.spacing12),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+            ),
+            child: const FaIcon(
+              FontAwesomeIcons.dumbbell,
+              color: AppColors.primary,
+            ),
           ),
-        ),
+          const SizedBox(width: AppSizes.spacing16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Workout in Progress',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: AppSizes.spacing4),
+                Text(
+                  session.programName,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          const FaIcon(
+            FontAwesomeIcons.chevronRight,
+            color: AppColors.primary,
+            size: 20,
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildQuickActions(BuildContext context, WidgetRef ref) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Quick Actions',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: AppSizes.spacing16),
-        Row(
-          children: [
-            Expanded(
-              child: _QuickActionCard(
-                icon: FontAwesomeIcons.plus,
-                label: 'New Program',
-                onTap: () => context.push(AppRoutes.createProgram),
-              ),
-            ),
-            const SizedBox(width: AppSizes.spacing12),
-            Expanded(
-              child: _QuickActionCard(
-                icon: FontAwesomeIcons.dumbbell,
-                label: 'Exercises',
-                onTap: () => context.push(AppRoutes.exerciseLibrary),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSizes.spacing12),
-        Row(
-          children: [
-            Expanded(
-              child: _QuickActionCard(
-                icon: FontAwesomeIcons.clockRotateLeft,
-                label: 'History',
-                onTap: () => context.push(AppRoutes.workoutHistory),
-              ),
-            ),
-            const SizedBox(width: AppSizes.spacing12),
-            Expanded(
-              child: _QuickActionCard(
-                icon: FontAwesomeIcons.arrowTrendUp,
-                label: 'Progress',
-                onTap: () => context.push(AppRoutes.progress),
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 
@@ -242,24 +201,60 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         else if (state.programs.isEmpty)
           _buildEmptyState(context)
         else
-          ...state.programs.take(3).map((program) => Card(
-                margin: const EdgeInsets.only(bottom: AppSizes.spacing12),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: AppColors.primary,
-                    child: Text(
-                      program.name[0].toUpperCase(),
-                      style: const TextStyle(
-                        color: AppColors.background,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  title: Text(program.name),
-                  subtitle: Text('${program.exercises.length} exercises'),
-                  trailing: const FaIcon(FontAwesomeIcons.chevronRight, size: 16),
+          ...state.programs.take(3).map((program) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSizes.spacing12),
+                child: LiquidGlass(
                   onTap: () => context.push(
                     AppRoutes.programDetail.replaceAll(':id', program.id),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                        ),
+                        child: Center(
+                          child: Text(
+                            program.name[0].toUpperCase(),
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSizes.spacing16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              program.name,
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                            const SizedBox(height: AppSizes.spacing4),
+                            Text(
+                              '${program.exercises.length} exercises',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const FaIcon(
+                        FontAwesomeIcons.chevronRight,
+                        size: 16,
+                        color: AppColors.textSecondary,
+                      ),
+                    ],
                   ),
                 ),
               )),
@@ -268,14 +263,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSizes.spacing32),
+    return LiquidGlass(
+      padding: const EdgeInsets.all(AppSizes.spacing32),
+      child: SizedBox(
+        width: double.infinity,
         child: Column(
           children: [
             FaIcon(
               FontAwesomeIcons.dumbbell,
-              size: 64,
+              size: 48,
               color: AppColors.textSecondary,
             ),
             const SizedBox(height: AppSizes.spacing16),
@@ -284,6 +280,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: AppColors.textSecondary,
                   ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -294,19 +291,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _showSettingsMenu(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const FaIcon(FontAwesomeIcons.rightFromBracket, color: AppColors.error),
-              title: const Text('Logout'),
-              onTap: () {
-                Navigator.pop(context);
-                _confirmLogout(context, ref);
-              },
-            ),
-          ],
+      backgroundColor: Colors.transparent,
+      builder: (context) => LiquidGlass(
+        borderRadius: AppSizes.radiusLarge,
+        margin: const EdgeInsets.all(AppSizes.spacing16),
+        padding: EdgeInsets.zero,
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const FaIcon(FontAwesomeIcons.rightFromBracket, color: AppColors.error),
+                title: const Text('Logout'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _confirmLogout(context, ref);
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -315,156 +318,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _confirmLogout(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout'),
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      builder: (context) => GlassDialog(
+        title: 'Logout',
         content: const Text('Are you sure you want to logout?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+          GlassDialogButton(
+            label: 'Cancel',
+            onTap: () => Navigator.pop(context),
           ),
-          TextButton(
-            onPressed: () async {
+          GlassDialogButton(
+            label: 'Logout',
+            color: AppColors.error,
+            isPrimary: true,
+            onTap: () async {
               Navigator.pop(context);
               await ref.read(authViewModelProvider.notifier).signOut();
-              scaffoldMessengerKey.currentState?.showSnackBar(
-                const SnackBar(
-                  content: Text('Logged out successfully'),
-                  backgroundColor: Colors.green,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              if (context.mounted) {
+                context.showSnackBar('Logged out successfully');
+              }
             },
-            child: const Text(
-              'Logout',
-              style: TextStyle(color: AppColors.error),
-            ),
           ),
         ],
-      ),
-    );
-  }
-
-  void _showStartWorkoutDialog(BuildContext context, WidgetRef ref) {
-    final programs = ref.read(programViewModelProvider).programs;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Start Workout'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Card(
-                color: AppColors.primary.withOpacity(0.1),
-                child: ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(AppSizes.spacing8),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                    ),
-                    child: const FaIcon(
-                      FontAwesomeIcons.bolt,
-                      color: AppColors.background,
-                    ),
-                  ),
-                  title: const Text(
-                    'Quick Start',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: const Text('Workout without a program'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.push(AppRoutes.quickWorkout);
-                  },
-                ),
-              ),
-              const SizedBox(height: AppSizes.spacing16),
-              if (programs.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: AppSizes.spacing16),
-                  child: Text('No programs yet. Create one or start a quick workout.'),
-                )
-              else ...[
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Or pick a program',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                  ),
-                ),
-                const SizedBox(height: AppSizes.spacing8),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 280),
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: programs.length,
-                    itemBuilder: (context, index) {
-                      final program = programs[index];
-                      return ListTile(
-                        title: Text(program.name),
-                        subtitle: Text('${program.exercises.length} exercises'),
-                        onTap: () {
-                          Navigator.pop(context);
-                          context.push(
-                            AppRoutes.workout.replaceAll(':programId', program.id),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _QuickActionCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _QuickActionCard({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSizes.spacing16),
-          child: Column(
-            children: [
-              FaIcon(icon, color: AppColors.primary, size: 32),
-              const SizedBox(height: AppSizes.spacing8),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
