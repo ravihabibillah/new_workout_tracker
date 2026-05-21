@@ -1,4 +1,4 @@
-# Firebase Setup untuk IronLog
+# Firebase Setup untuk Heft
 
 ## 🔥 Cara Konfigurasi Firebase
 

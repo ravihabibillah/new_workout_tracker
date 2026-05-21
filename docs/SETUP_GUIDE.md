@@ -1,6 +1,6 @@
-# IronLog - Complete Setup Guide
+# Heft - Complete Setup Guide
 
-This guide will walk you through setting up the IronLog app from scratch.
+This guide will walk you through setting up the Heft app from scratch.
 
 ## Prerequisites Checklist
 
@@ -52,7 +52,7 @@ Expected output: "Succeeded after X.Xs with Y outputs"
 
 1. Go to https://console.firebase.google.com/
 2. Click "Add project"
-3. Enter project name: "IronLog" (or your choice)
+3. Enter project name: "Heft" (or your choice)
 4. Disable Google Analytics (optional)
 5. Click "Create project"
 
@@ -309,4 +309,4 @@ If you encounter issues:
 - [ ] Can log workouts
 - [ ] Can view progress
 
-Congratulations! Your IronLog app is ready! 🎉💪
+Congratulations! Your Heft app is ready! 🎉💪

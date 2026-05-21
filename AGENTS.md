@@ -1,7 +1,7 @@
-# IronLog - Workout Tracker
+# Heft - Workout Tracker
 
 ## Project Overview
-Flutter app (IronLog) - weightlifting progress tracker using Firebase, Riverpod, and GoRouter.
+Flutter app (Heft) - weightlifting progress tracker using Firebase, Riverpod, and GoRouter.
 
 ## Tech Stack
 - Flutter 3.27.1 / Dart 3.6.0

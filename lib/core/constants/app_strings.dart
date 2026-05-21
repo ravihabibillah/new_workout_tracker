@@ -3,13 +3,13 @@ class AppStrings {
   AppStrings._();
 
   // App
-  static const String appName = 'IronLog';
+  static const String appName = 'Heft';
   static const String appTagline = 'Track Your Strength Journey';
 
   // Auth
   static const String signInWithGoogle = 'Sign in with Google';
   static const String signOut = 'Sign Out';
-  static const String welcome = 'Welcome to IronLog';
+  static const String welcome = 'Welcome to Heft';
   static const String authError = 'Authentication failed. Please try again.';
 
   // Home

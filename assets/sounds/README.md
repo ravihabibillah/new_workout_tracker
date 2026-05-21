@@ -1,6 +1,6 @@
 # Assets - Sounds
 
-This directory is for audio files used in the IronLog app.
+This directory is for audio files used in the Heft app.
 
 ## Rest Timer Sound
 

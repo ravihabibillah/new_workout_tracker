@@ -1,4 +1,4 @@
-# IronLog - Project Summary
+# Heft - Project Summary
 
 ## 🎉 Project Status: COMPLETE
 

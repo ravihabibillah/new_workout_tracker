@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to IronLog are documented in this file.
+All notable changes to Heft are documented in this file.
 
 ## [Unreleased]
 
@@ -34,7 +34,7 @@ All notable changes to IronLog are documented in this file.
 ## [1.0.0] - 2026-05-01
 
 ### Added
-- Initial release of IronLog
+- Initial release of Heft
 - **Google Authentication** with Firebase Auth
 - **Program Management** — create, edit, delete workout programs
 - **Active Workout Tracking** — log sets, reps, and weight in real-time

@@ -1,4 +1,4 @@
-# IronLog - Weightlifting Progress Tracker
+# Heft - Weightlifting Progress Tracker
 
 A Flutter app for tracking weightlifting workouts, managing programs, and visualizing strength progress.
 
