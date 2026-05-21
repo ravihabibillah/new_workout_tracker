@@ -46,7 +46,7 @@ class WorkoutSessionModel extends WorkoutSessionEntity {
           ? DateTime.parse(json['endTime'] as String)
           : null,
       exerciseLogs: (json['exerciseLogs'] as List<dynamic>)
-          .map((e) => ExerciseLogModel.fromJson(e as Map<String, dynamic>))
+          .map((e) => ExerciseLogModel.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList(),
       isCompleted: json['isCompleted'] as bool? ?? false,
       useRestTimer: json['useRestTimer'] as bool? ?? false,

@@ -25,7 +25,7 @@ class ExerciseLogModel extends ExerciseLogEntity {
       exerciseName: json['exerciseName'] as String,
       muscleGroup: json['muscleGroup'] as String,
       sets: (json['sets'] as List<dynamic>)
-          .map((s) => SetLogModel.fromJson(s as Map<String, dynamic>))
+          .map((s) => SetLogModel.fromJson(Map<String, dynamic>.from(s as Map)))
           .toList(),
     );
   }

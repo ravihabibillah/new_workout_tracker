@@ -38,7 +38,7 @@ class ProgramModel extends ProgramEntity {
       name: json['name'] as String,
       description: json['description'] as String?,
       exercises: (json['exercises'] as List<dynamic>)
-          .map((e) => ExerciseModel.fromJson(e as Map<String, dynamic>))
+          .map((e) => ExerciseModel.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList(),
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: json['updatedAt'] != null
