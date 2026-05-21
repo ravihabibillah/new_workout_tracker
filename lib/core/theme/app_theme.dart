@@ -22,8 +22,6 @@ class AppTheme {
         onSurface: AppColors.textPrimary,
         error: AppColors.error,
         onError: AppColors.textPrimary,
-        background: AppColors.background,
-        onBackground: AppColors.textPrimary,
       ),
       textTheme: _textTheme,
       appBarTheme: _appBarTheme,

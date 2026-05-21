@@ -7,6 +7,7 @@ import '../../../core/constants/app_sizes.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../viewmodels/auth_viewmodel.dart';
+import '../../widgets/liquid_glass.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -20,8 +21,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return GlassScaffold(
+      extendBodyBehindAppBar: false,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(AppSizes.spacing24),
@@ -53,36 +54,44 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
               const Spacer(),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _signInWithGoogle,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppSizes.spacing16,
-                  ),
+              LiquidGlass(
+                tintColor: AppColors.primary,
+                tintOpacity: 0.2,
+                onTap: _isLoading ? null : _signInWithGoogle,
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppSizes.spacing16,
+                  horizontal: AppSizes.spacing24,
                 ),
-                child: _isLoading
-                    ? const SizedBox(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (_isLoading)
+                      const SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.background,
-                          ),
+                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                         ),
                       )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const FaIcon(
-                            FontAwesomeIcons.google,
-                            size: 20,
-                            color: AppColors.background,
-                          ),
-                          const SizedBox(width: AppSizes.spacing12),
-                          Text(AppStrings.signInWithGoogle),
-                        ],
+                    else ...[
+                      const FaIcon(
+                        FontAwesomeIcons.google,
+                        size: 20,
+                        color: AppColors.primary,
                       ),
+                      const SizedBox(width: AppSizes.spacing12),
+                      Text(
+                        AppStrings.signInWithGoogle,
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
               const SizedBox(height: AppSizes.spacing48),
             ],

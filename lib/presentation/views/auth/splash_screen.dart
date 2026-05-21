@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../widgets/liquid_glass.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -14,18 +15,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 10), () {
-      if (mounted) {
-        print('⚠️ SPLASH: Timeout reached - still on splash screen');
-        print('⚠️ SPLASH: This usually means auth state is not resolving');
-      }
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return GlassScaffold(
+      extendBodyBehindAppBar: false,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
