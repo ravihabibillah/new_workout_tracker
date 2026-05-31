@@ -1,0 +1,45 @@
+# Flutter build artifacts
+build/
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+docs/
+README.md
+CHANGELOG.md
+
+# Test files
+test/
+**/*_test.dart
+
+# Platform-specific (not needed for web)
+android/
+ios/
+linux/
+macos/
+windows/
+
+# Firebase local
+.firebase/
+firebase-debug.log
+
+# Misc
+*.log
+.opencode/
