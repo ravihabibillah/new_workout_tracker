@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../core/errors/failure.dart';
 import '../../domain/entities/user_entity.dart';
@@ -11,13 +12,21 @@ import 'program_viewmodel.dart';
 
 part 'auth_viewmodel.g.dart';
 
+/// Web Google OAuth client ID. Get this from Firebase Console:
+/// Authentication > Sign-in method > Google > Web SDK configuration
+/// Or from Google Cloud Console > APIs & Services > Credentials > OAuth 2.0 Client IDs (Web client)
+const String _googleSignInWebClientId =
+    '509205586680-t8h9pihd2ache7p73pt5qcm1ljlffpps.apps.googleusercontent.com';
+
 /// Auth repository provider
 @riverpod
 IAuthRepository authRepository(AuthRepositoryRef ref) {
   return AuthRepositoryImpl(
     dataSource: FirebaseAuthDataSource(
       firebaseAuth: FirebaseAuth.instance,
-      googleSignIn: GoogleSignIn(),
+      googleSignIn: GoogleSignIn(
+        clientId: kIsWeb ? _googleSignInWebClientId : null,
+      ),
       firestore: FirebaseFirestore.instance,
     ),
   );

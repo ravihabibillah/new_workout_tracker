@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive/hive.dart';
 import '../../models/program_model.dart';
+import 'hive_init.dart';
 
 /// Local cache for user programs using Hive.
 ///
@@ -25,6 +26,7 @@ class ProgramCache {
 
   Future<void> init() async {
     if (_initialized) return;
+    await initHive();
     _programsBox = await Hive.openBox<Map>(_programsBoxName);
     _metaBox = await Hive.openBox(_metaBoxName);
     _initialized = true;

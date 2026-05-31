@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:vibration/vibration.dart';
 import '../../core/errors/failure.dart';
+import '../../core/utils/haptic_feedback.dart';
 import '../../domain/entities/workout_session_entity.dart';
 import '../../domain/entities/exercise_log_entity.dart';
 import '../../domain/entities/set_log_entity.dart';
@@ -274,10 +274,7 @@ class WorkoutViewModel extends _$WorkoutViewModel {
         timer.cancel();
         state = state.copyWith(restTimerSeconds: 0, isRestTimerActive: false);
         if (vibrateOnComplete) {
-          final hasVibrator = await Vibration.hasVibrator();
-          if (hasVibrator) {
-            Vibration.vibrate(duration: 500, amplitude: 255);
-          }
+          await vibrateIfSupported();
         }
       } else {
         state = state.copyWith(restTimerSeconds: current - 1);

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive/hive.dart';
 import '../../models/exercise_library_model.dart';
+import 'hive_init.dart';
 
 /// Local cache for the global exercise library using Hive.
 ///
@@ -28,7 +29,7 @@ class ExerciseLibraryCache {
 
   Future<void> init() async {
     if (_initialized) return;
-    await Hive.initFlutter();
+    await initHive();
     _exercisesBox = await Hive.openBox<Map>(_exercisesBoxName);
     _metaBox = await Hive.openBox(_metaBoxName);
     _initialized = true;
